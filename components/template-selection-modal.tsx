@@ -16,7 +16,7 @@ export function TemplateSelectionModal({ onClose }: TemplateSelectionModalProps)
 
   const selectTemplate = (templateId: string) => {
     // In a real app, we would pass the template ID to the editor
-    router.push(`/documents/editor?template=${templateId}`)
+    router.push(`/resources/editor?template=${templateId}`)
     onClose()
   }
 

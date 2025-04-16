@@ -21,6 +21,7 @@ import {
 import { useState } from "react"
 import { DocumentChatbot } from "@/components/document-chatbot"
 import Link from "next/link"
+import { TemplateSelectionModal } from "@/components/template-selection-modal"
 
 export default function ResourcesPage() {
   const [showTemplateModal, setShowTemplateModal] = useState(false)
@@ -55,11 +56,11 @@ export default function ResourcesPage() {
           <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
             <CardHeader>
               <CardTitle>Assessment Instructions</CardTitle>
-              <CardDescription>Important information about your assessment</CardDescription>
+              <CardDescription>Important information about your workplace assessment</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="mb-4">
-                Welcome to your assessment. This simulation is designed to evaluate your skills in a typical
+                Welcome to your workplace assessment. This simulation is designed to evaluate your skills in a typical
                 office environment. You will complete various tasks using email, documents, chat, and other workplace
                 tools.
               </p>
@@ -135,6 +136,7 @@ export default function ResourcesPage() {
       </div>
 
       <DocumentChatbot />
+      {showTemplateModal && <TemplateSelectionModal onClose={() => setShowTemplateModal(false)} />}
     </div>
   )
 }
@@ -224,7 +226,7 @@ const assessmentDocs: Resource[] = [
   {
     id: 1,
     title: "Assessment Overview",
-    description: "Introduction to the assessment and objectives",
+    description: "Introduction to the workplace assessment and objectives",
     category: "Assessment",
     icon: BookOpen,
     date: "Updated Apr 2025",
