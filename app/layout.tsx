@@ -4,12 +4,13 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Sidebar } from "@/components/sidebar"
+import { DocumentChatbot } from "@/components/document-chatbot"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "New Assessment Center",
-  description: "A comprehensive assessment platform",
+  title: "Workplace Assessment Platform",
+  description: "A comprehensive workplace assessment platform",
     generator: 'v0.dev'
 }
 
@@ -25,12 +26,10 @@ export default function RootLayout({
           <div className="flex min-h-screen">
             <Sidebar />
             <main className="flex-1 overflow-y-auto">{children}</main>
+            <DocumentChatbot />
           </div>
         </ThemeProvider>
       </body>
     </html>
   )
 }
-
-
-import './globals.css'

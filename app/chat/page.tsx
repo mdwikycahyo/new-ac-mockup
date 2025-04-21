@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Search, Send, Smile, Paperclip } from "lucide-react"
+import { Search, Send } from "lucide-react"
 
 export default function ChatPage() {
   return (
@@ -57,12 +57,6 @@ export default function ChatPage() {
           </CardContent>
           <div className="border-t p-4">
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon">
-                <Paperclip className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon">
-                <Smile className="h-4 w-4" />
-              </Button>
               <Input placeholder="Type your message..." className="flex-1" />
               <Button size="icon">
                 <Send className="h-4 w-4" />

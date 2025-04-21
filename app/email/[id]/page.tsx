@@ -4,21 +4,10 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-  ArrowLeft,
-  Reply,
-  ReplyAll,
-  Forward,
-  Trash,
-  Archive,
-  Star,
-  MoreHorizontal,
-  Paperclip,
-  Download,
-} from "lucide-react"
+import { ArrowLeft, Reply, Forward, Trash, Archive, MoreHorizontal, Paperclip, Download, Send } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
-import { Textarea } from "@/components/ui/textarea"
+import { RichTextEditor } from "@/components/rich-text-editor"
 
 // Mock email data - in a real app, this would come from an API
 const emailData = {
@@ -129,9 +118,6 @@ export default function EmailDetailPage() {
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon">
-              <Star className={`h-5 w-5 ${email.starred ? "fill-yellow-400 text-yellow-400" : ""}`} />
-            </Button>
-            <Button variant="ghost" size="icon">
               <Archive className="h-5 w-5" />
             </Button>
             <Button variant="ghost" size="icon">
@@ -175,9 +161,6 @@ export default function EmailDetailPage() {
                 <Reply className="mr-2 h-4 w-4" /> Reply
               </Button>
               <Button variant="outline">
-                <ReplyAll className="mr-2 h-4 w-4" /> Reply All
-              </Button>
-              <Button variant="outline">
                 <Forward className="mr-2 h-4 w-4" /> Forward
               </Button>
             </div>
@@ -186,17 +169,19 @@ export default function EmailDetailPage() {
           {isReplying && (
             <div className="border-t p-4">
               <h3 className="mb-3 font-medium">Reply to {email.sender}</h3>
-              <Textarea
-                placeholder="Write your reply here..."
-                className="mb-3 min-h-[150px]"
+              <RichTextEditor
                 value={replyContent}
-                onChange={(e) => setReplyContent(e.target.value)}
+                onChange={setReplyContent}
+                placeholder="Write your reply here..."
+                minHeight="150px"
               />
-              <div className="flex justify-end space-x-2">
+              <div className="flex justify-end space-x-2 mt-3">
                 <Button variant="outline" onClick={() => setIsReplying(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleSendReply}>Send</Button>
+                <Button onClick={handleSendReply}>
+                  <Send className="mr-2 h-4 w-4" /> Send
+                </Button>
               </div>
             </div>
           )}

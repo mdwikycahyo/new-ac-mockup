@@ -13,7 +13,7 @@ export default function Dashboard() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Welcome, Participant</h1>
           <p className="text-muted-foreground">
-            Your assessment is in progress. Complete the tasks to continue.
+            Your workplace assessment is in progress. Complete the tasks to continue.
           </p>
         </div>
         <NotificationCenter />
@@ -78,7 +78,7 @@ export default function Dashboard() {
           notification={3}
         />
         <WorkplaceToolCard
-          title="Tasks"
+          title="Project Management"
           description="4 pending tasks"
           icon={CheckSquare}
           href="/tasks"
@@ -103,7 +103,7 @@ function WorkplaceToolCard({ title, description, icon: Icon, href, notification 
       <Link href={href}>
         <CardHeader className="relative pb-2">
           {notification && (
-            <span className="absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
+            <span className="absolute right-4 top-4 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
               {notification}
             </span>
           )}
