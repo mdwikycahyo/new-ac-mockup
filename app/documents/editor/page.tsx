@@ -21,10 +21,13 @@ import {
   Save,
   ArrowLeft,
   MoreHorizontal,
+  AlignCenter,
+  AlignRight,
+  Link2,
 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import Link from "next/link"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 export default function DocumentEditor() {
   const searchParams = useSearchParams()
@@ -33,6 +36,7 @@ export default function DocumentEditor() {
   const [blocks, setBlocks] = useState<Block[]>([{ id: "1", type: "paragraph", content: "" }])
   const [selectedBlockId, setSelectedBlockId] = useState("1")
   const editorRef = useRef<HTMLDivElement>(null)
+  const [activeFormats, setActiveFormats] = useState<string[]>([])
 
   // Load template content based on templateId
   useEffect(() => {
@@ -87,6 +91,20 @@ export default function DocumentEditor() {
     setSelectedBlockId(newBlock.id)
   }
 
+  const formatBlock = (command: string, value = "") => {
+    document.execCommand(command, false, value)
+
+    // Update active formats
+    if (activeFormats.includes(command)) {
+      setActiveFormats(activeFormats.filter((f) => f !== command))
+    } else {
+      setActiveFormats([...activeFormats, command])
+    }
+
+    // Focus back on the editor
+    editorRef.current?.focus()
+  }
+
   return (
     <div className="container mx-auto flex min-h-screen flex-col p-6">
       <div className="mb-6 flex items-center justify-between">
@@ -114,63 +132,182 @@ export default function DocumentEditor() {
       </div>
 
       <Card className="flex-1 p-0">
-        <div className="border-b p-2">
-          <div className="flex flex-wrap items-center gap-1">
-            <Button variant="ghost" size="sm">
-              <Bold className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <Italic className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <Underline className="h-4 w-4" />
-            </Button>
-            <div className="mx-1 h-4 w-px bg-border" />
-            <Button variant="ghost" size="sm">
-              <AlignLeft className="h-4 w-4" />
-            </Button>
-            <div className="mx-1 h-4 w-px bg-border" />
-            <Button variant="ghost" size="sm">
-              <List className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <ListOrdered className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <CheckSquare className="h-4 w-4" />
-            </Button>
-            <div className="mx-1 h-4 w-px bg-border" />
-            <Button variant="ghost" size="sm">
-              <ImageIcon className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <Table className="h-4 w-4" />
-            </Button>
-            <div className="mx-1 h-4 w-px bg-border" />
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-1">
-                  Text <ChevronDown className="h-3 w-3" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-56 p-0">
-                <div className="p-1">
-                  {blockTypes.map((blockType) => (
-                    <Button
-                      key={blockType.type}
-                      variant="ghost"
-                      className="w-full justify-start"
-                      onClick={() => addBlock(blockType.type)}
-                    >
-                      <blockType.icon className="mr-2 h-4 w-4" />
-                      {blockType.label}
-                    </Button>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
+        <TooltipProvider>
+          <div className="border-b p-2">
+            <div className="flex flex-wrap items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => formatBlock("bold")}
+                    className={activeFormats.includes("bold") ? "bg-accent" : ""}
+                  >
+                    <Bold className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Bold</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => formatBlock("italic")}
+                    className={activeFormats.includes("italic") ? "bg-accent" : ""}
+                  >
+                    <Italic className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Italic</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => formatBlock("underline")}
+                    className={activeFormats.includes("underline") ? "bg-accent" : ""}
+                  >
+                    <Underline className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Underline</TooltipContent>
+              </Tooltip>
+
+              <div className="mx-1 h-4 w-px bg-border" />
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => formatBlock("justifyLeft")}
+                    className={activeFormats.includes("justifyLeft") ? "bg-accent" : ""}
+                  >
+                    <AlignLeft className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Align Left</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => formatBlock("justifyCenter")}
+                    className={activeFormats.includes("justifyCenter") ? "bg-accent" : ""}
+                  >
+                    <AlignCenter className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Align Center</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => formatBlock("justifyRight")}
+                    className={activeFormats.includes("justifyRight") ? "bg-accent" : ""}
+                  >
+                    <AlignRight className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Align Right</TooltipContent>
+              </Tooltip>
+
+              <div className="mx-1 h-4 w-px bg-border" />
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => formatBlock("insertUnorderedList")}
+                    className={activeFormats.includes("insertUnorderedList") ? "bg-accent" : ""}
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Bullet List</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => formatBlock("insertOrderedList")}
+                    className={activeFormats.includes("insertOrderedList") ? "bg-accent" : ""}
+                  >
+                    <ListOrdered className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Numbered List</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => formatBlock("insertCheckbox")}
+                    className={activeFormats.includes("insertCheckbox") ? "bg-accent" : ""}
+                  >
+                    <CheckSquare className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Checkbox</TooltipContent>
+              </Tooltip>
+
+              <div className="mx-1 h-4 w-px bg-border" />
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const url = prompt("Enter URL:")
+                      if (url) formatBlock("createLink", url)
+                    }}
+                  >
+                    <Link2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Insert Link</TooltipContent>
+              </Tooltip>
+
+              <div className="mx-1 h-4 w-px bg-border" />
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="gap-1">
+                        Add Block <ChevronDown className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-56">
+                      {blockTypes.map((blockType) => (
+                        <DropdownMenuItem key={blockType.type} onClick={() => addBlock(blockType.type)}>
+                          <blockType.icon className="mr-2 h-4 w-4" />
+                          {blockType.label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TooltipTrigger>
+                <TooltipContent>Add Block</TooltipContent>
+              </Tooltip>
+            </div>
           </div>
-        </div>
+        </TooltipProvider>
 
         <div className="mx-auto max-w-3xl p-8" ref={editorRef}>
           {blocks.map((block) => (
@@ -185,22 +322,6 @@ export default function DocumentEditor() {
           ))}
         </div>
       </Card>
-
-      <div className="fixed bottom-4 right-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button>+ Add Block</Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {blockTypes.map((blockType) => (
-              <DropdownMenuItem key={blockType.type} onClick={() => addBlock(blockType.type)}>
-                <blockType.icon className="mr-2 h-4 w-4" />
-                {blockType.label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
     </div>
   )
 }
@@ -230,6 +351,7 @@ interface EditorBlockProps {
   onKeyDown: (e: React.KeyboardEvent) => void
 }
 
+// Replace the EditorBlock component with this improved version that properly maintains cursor position
 function EditorBlock({ block, isSelected, onChange, onSelect, onKeyDown }: EditorBlockProps) {
   const blockRef = useRef<HTMLDivElement>(null)
 
@@ -239,6 +361,20 @@ function EditorBlock({ block, isSelected, onChange, onSelect, onKeyDown }: Edito
     }
   }, [isSelected])
 
+  // This is the key improvement - we're not using dangerouslySetInnerHTML for active editing
+  // Instead, we initialize the content once and then let the contentEditable handle updates
+  useEffect(() => {
+    if (blockRef.current && !blockRef.current.textContent) {
+      blockRef.current.innerHTML = block.content
+    }
+  }, [block.id])
+
+  const handleInput = () => {
+    if (blockRef.current) {
+      onChange(blockRef.current.innerHTML)
+    }
+  }
+
   const renderBlock = () => {
     switch (block.type) {
       case "heading1":
@@ -246,10 +382,11 @@ function EditorBlock({ block, isSelected, onChange, onSelect, onKeyDown }: Edito
           <div
             ref={blockRef}
             contentEditable
+            suppressContentEditableWarning
+            data-block-id={block.id}
             className="mb-4 outline-none text-3xl font-bold"
-            onInput={(e) => onChange(e.currentTarget.textContent || "")}
+            onInput={handleInput}
             onKeyDown={onKeyDown}
-            dangerouslySetInnerHTML={{ __html: block.content }}
           />
         )
       case "heading2":
@@ -257,10 +394,11 @@ function EditorBlock({ block, isSelected, onChange, onSelect, onKeyDown }: Edito
           <div
             ref={blockRef}
             contentEditable
+            suppressContentEditableWarning
+            data-block-id={block.id}
             className="mb-3 outline-none text-2xl font-bold"
-            onInput={(e) => onChange(e.currentTarget.textContent || "")}
+            onInput={handleInput}
             onKeyDown={onKeyDown}
-            dangerouslySetInnerHTML={{ __html: block.content }}
           />
         )
       case "heading3":
@@ -268,10 +406,11 @@ function EditorBlock({ block, isSelected, onChange, onSelect, onKeyDown }: Edito
           <div
             ref={blockRef}
             contentEditable
+            suppressContentEditableWarning
+            data-block-id={block.id}
             className="mb-2 outline-none text-xl font-bold"
-            onInput={(e) => onChange(e.currentTarget.textContent || "")}
+            onInput={handleInput}
             onKeyDown={onKeyDown}
-            dangerouslySetInnerHTML={{ __html: block.content }}
           />
         )
       case "bulletList":
@@ -281,10 +420,11 @@ function EditorBlock({ block, isSelected, onChange, onSelect, onKeyDown }: Edito
             <div
               ref={blockRef}
               contentEditable
+              suppressContentEditableWarning
+              data-block-id={block.id}
               className="flex-1 outline-none"
-              onInput={(e) => onChange(e.currentTarget.textContent || "")}
+              onInput={handleInput}
               onKeyDown={onKeyDown}
-              dangerouslySetInnerHTML={{ __html: block.content }}
             />
           </div>
         )
@@ -295,10 +435,11 @@ function EditorBlock({ block, isSelected, onChange, onSelect, onKeyDown }: Edito
             <div
               ref={blockRef}
               contentEditable
+              suppressContentEditableWarning
+              data-block-id={block.id}
               className="flex-1 outline-none"
-              onInput={(e) => onChange(e.currentTarget.textContent || "")}
+              onInput={handleInput}
               onKeyDown={onKeyDown}
-              dangerouslySetInnerHTML={{ __html: block.content }}
             />
           </div>
         )
@@ -309,10 +450,11 @@ function EditorBlock({ block, isSelected, onChange, onSelect, onKeyDown }: Edito
             <div
               ref={blockRef}
               contentEditable
+              suppressContentEditableWarning
+              data-block-id={block.id}
               className="flex-1 outline-none"
-              onInput={(e) => onChange(e.currentTarget.textContent || "")}
+              onInput={handleInput}
               onKeyDown={onKeyDown}
-              dangerouslySetInnerHTML={{ __html: block.content }}
             />
           </div>
         )
@@ -325,10 +467,11 @@ function EditorBlock({ block, isSelected, onChange, onSelect, onKeyDown }: Edito
             <div
               ref={blockRef}
               contentEditable
+              suppressContentEditableWarning
+              data-block-id={block.id}
               className="mt-2 text-center text-sm text-muted-foreground outline-none"
-              onInput={(e) => onChange(e.currentTarget.textContent || "")}
+              onInput={handleInput}
               onKeyDown={onKeyDown}
-              dangerouslySetInnerHTML={{ __html: block.content || "Add caption..." }}
             />
           </div>
         )
@@ -341,20 +484,21 @@ function EditorBlock({ block, isSelected, onChange, onSelect, onKeyDown }: Edito
                   <td className="border p-2">
                     <div
                       contentEditable
+                      suppressContentEditableWarning
                       className="outline-none"
-                      onInput={(e) => onChange(e.currentTarget.textContent || "")}
+                      onInput={handleInput}
                     />
                   </td>
                   <td className="border p-2">
-                    <div contentEditable className="outline-none" />
+                    <div contentEditable suppressContentEditableWarning className="outline-none" />
                   </td>
                 </tr>
                 <tr>
                   <td className="border p-2">
-                    <div contentEditable className="outline-none" />
+                    <div contentEditable suppressContentEditableWarning className="outline-none" />
                   </td>
                   <td className="border p-2">
-                    <div contentEditable className="outline-none" />
+                    <div contentEditable suppressContentEditableWarning className="outline-none" />
                   </td>
                 </tr>
               </tbody>
@@ -366,10 +510,11 @@ function EditorBlock({ block, isSelected, onChange, onSelect, onKeyDown }: Edito
           <div
             ref={blockRef}
             contentEditable
+            suppressContentEditableWarning
+            data-block-id={block.id}
             className="mb-3 outline-none"
-            onInput={(e) => onChange(e.currentTarget.textContent || "")}
+            onInput={handleInput}
             onKeyDown={onKeyDown}
-            dangerouslySetInnerHTML={{ __html: block.content }}
           />
         )
     }

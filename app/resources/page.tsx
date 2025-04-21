@@ -5,27 +5,28 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  Search,
-  Plus,
-  File,
-  FileText,
-  FileSpreadsheet,
-  FilePieChart,
-  Clock,
-  Star,
-  FolderOpen,
-  BookOpen,
-  BarChart2,
-} from "lucide-react"
-import { useState } from "react"
+import { Search, Plus, File, FileText, FileSpreadsheet, FilePieChart, Clock, FolderOpen, BookOpen } from "lucide-react"
+import { useState, useEffect } from "react"
 import { DocumentChatbot } from "@/components/document-chatbot"
 import Link from "next/link"
 import { TemplateSelectionModal } from "@/components/template-selection-modal"
+import { useRouter, useSearchParams } from "next/navigation"
 
 export default function ResourcesPage() {
   const [showTemplateModal, setShowTemplateModal] = useState(false)
+  const [activeTab, setActiveTab] = useState("assessment")
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
+  // Restore active tab from URL when returning from document view
+  useEffect(() => {
+    const tab = searchParams.get("tab")
+    if (tab) {
+      setActiveTab(tab)
+    }
+  }, [searchParams])
+
+  // Add smooth transitions to tab content
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
@@ -44,7 +45,14 @@ export default function ResourcesPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="assessment">
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => {
+          setActiveTab(value)
+          // Update URL with new tab value without full page reload
+          router.push(`/resources?tab=${value}`, { scroll: false })
+        }}
+      >
         <TabsList className="mb-4">
           <TabsTrigger value="assessment">Assessment Info</TabsTrigger>
           <TabsTrigger value="documents">My Documents</TabsTrigger>
@@ -52,88 +60,65 @@ export default function ResourcesPage() {
           <TabsTrigger value="templates">Templates</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="assessment" className="space-y-4">
-          <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
-            <CardHeader>
-              <CardTitle>Assessment Instructions</CardTitle>
-              <CardDescription>Important information about your workplace assessment</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="mb-4">
-                Welcome to your workplace assessment. This simulation is designed to evaluate your skills in a typical
-                office environment. You will complete various tasks using email, documents, chat, and other workplace
-                tools.
-              </p>
-              <p className="mb-4">
-                <strong>Important:</strong> This assessment represents a single workday. All tasks should be completed
-                within the simulated timeframe.
-              </p>
-              <div className="mt-4">
-                <Button asChild>
-                  <Link href="/resources/document/1">
-                    <BookOpen className="mr-2 h-4 w-4" /> Read Full Instructions
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {assessmentDocs.map((doc) => (
-              <ResourceCard key={doc.id} resource={doc} />
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="documents" className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {recentDocuments.map((doc) => (
-              <DocumentCard key={doc.id} document={doc} />
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="reference" className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {referenceResources.map((resource) => (
-              <ResourceCard key={resource.id} resource={resource} />
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="templates" className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {templateDocuments.map((doc) => (
-              <DocumentCard key={doc.id} document={doc} />
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      <div className="mt-8">
-        <h2 className="mb-4 text-xl font-semibold">Recently Viewed</h2>
-        <Card>
-          <CardContent className="p-0">
-            <div className="divide-y">
-              {recentlyViewed.map((item) => (
-                <div key={item.id} className="flex items-center gap-4 p-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                    <item.icon className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">{item.title}</p>
-                    <p className="text-sm text-muted-foreground">{item.category}</p>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{item.viewedAt}</p>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/resources/document/${item.id}`}>View</Link>
+        <div className="transition-all duration-300 ease-in-out">
+          <TabsContent value="assessment" className="space-y-4">
+            <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
+              <CardHeader>
+                <CardTitle>Assessment Instructions</CardTitle>
+                <CardDescription>Important information about your workplace assessment</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="mb-4">
+                  Welcome to your workplace assessment. This simulation is designed to evaluate your skills in a typical
+                  office environment. You will complete various tasks using email, documents, chat, and other workplace
+                  tools.
+                </p>
+                <p className="mb-4">
+                  <strong>Important:</strong> This assessment represents a single workday. All tasks should be completed
+                  within the simulated timeframe.
+                </p>
+                <div className="mt-4">
+                  <Button asChild>
+                    <Link href={`/resources/document/1?tab=${activeTab}`}>
+                      <BookOpen className="mr-2 h-4 w-4" /> Read Full Instructions
+                    </Link>
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {assessmentDocs.map((doc) => (
+                <ResourceCard key={doc.id} resource={doc} activeTab={activeTab} />
               ))}
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </TabsContent>
+
+          <TabsContent value="documents" className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {recentDocuments.map((doc) => (
+                <DocumentCard key={doc.id} document={doc} activeTab={activeTab} />
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="reference" className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {referenceResources.map((resource) => (
+                <ResourceCard key={resource.id} resource={resource} activeTab={activeTab} />
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="templates" className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {templateDocuments.map((doc) => (
+                <DocumentCard key={doc.id} document={doc} activeTab={activeTab} />
+              ))}
+            </div>
+          </TabsContent>
+        </div>
+      </Tabs>
 
       <DocumentChatbot />
       {showTemplateModal && <TemplateSelectionModal onClose={() => setShowTemplateModal(false)} />}
@@ -150,14 +135,14 @@ interface Document {
   starred?: boolean
 }
 
+// Update the document IDs to avoid conflicts
 const recentDocuments: Document[] = [
   {
-    id: 1,
+    id: 101, // Changed from 1 to 101 to avoid conflict with Assessment Overview
     title: "Quarterly Report Draft",
     type: "doc",
     lastModified: "Today, 10:30 AM",
     owner: "You",
-    starred: true,
   },
   {
     id: 2,
@@ -211,6 +196,13 @@ const templateDocuments: Document[] = [
     lastModified: "Mar 10, 2025",
     owner: "Templates",
   },
+  {
+    id: 11,
+    title: "Project Plan Template",
+    type: "doc",
+    lastModified: "Mar 5, 2025",
+    owner: "Templates",
+  },
 ]
 
 interface Resource {
@@ -232,26 +224,18 @@ const assessmentDocs: Resource[] = [
     date: "Updated Apr 2025",
   },
   {
-    id: 2,
-    title: "Task Checklist",
-    description: "List of all tasks to complete during the assessment",
-    category: "Assessment",
+    id: 6,
+    title: "Company Handbook",
+    description: "Guidelines, policies, and procedures for employees",
+    category: "HR Documents",
     icon: FileText,
-    date: "Updated Apr 2025",
-  },
-  {
-    id: 3,
-    title: "Evaluation Criteria",
-    description: "How your performance will be evaluated",
-    category: "Assessment",
-    icon: BarChart2,
-    date: "Updated Apr 2025",
+    date: "Updated Jan 2025",
   },
 ]
 
 const referenceResources: Resource[] = [
   {
-    id: 4,
+    id: 6,
     title: "Company Handbook",
     description: "Guidelines, policies, and procedures for employees",
     category: "HR Documents",
@@ -259,7 +243,7 @@ const referenceResources: Resource[] = [
     date: "Updated Jan 2025",
   },
   {
-    id: 5,
+    id: 11,
     title: "Project Plan Template",
     description: "Standard template for creating project plans",
     category: "Project Management",
@@ -267,7 +251,7 @@ const referenceResources: Resource[] = [
     date: "Updated Mar 2025",
   },
   {
-    id: 6,
+    id: 7,
     title: "Brand Guidelines",
     description: "Official brand colors, logos, and usage rules",
     category: "Marketing",
@@ -275,7 +259,7 @@ const referenceResources: Resource[] = [
     date: "Updated Feb 2025",
   },
   {
-    id: 7,
+    id: 102, // Changed from 8 to 102 to avoid conflict with Project Proposal Template
     title: "Research Database",
     description: "Access to industry research and reports",
     category: "Research",
@@ -284,39 +268,7 @@ const referenceResources: Resource[] = [
   },
 ]
 
-interface RecentlyViewedItem {
-  id: number
-  title: string
-  category: string
-  icon: React.ElementRef<typeof FileText>
-  viewedAt: string
-}
-
-const recentlyViewed: RecentlyViewedItem[] = [
-  {
-    id: 1,
-    title: "Assessment Overview",
-    category: "Assessment",
-    icon: BookOpen,
-    viewedAt: "Today, 9:30 AM",
-  },
-  {
-    id: 8,
-    title: "Quarterly Report Draft",
-    category: "Documents",
-    icon: FileText,
-    viewedAt: "Yesterday, 2:15 PM",
-  },
-  {
-    id: 6,
-    title: "Company Handbook",
-    category: "HR",
-    icon: BookOpen,
-    viewedAt: "Apr 12, 2025",
-  },
-]
-
-function ResourceCard({ resource }: { resource: Resource }) {
+function ResourceCard({ resource, activeTab }: { resource: Resource; activeTab: string }) {
   const ResourceIcon = resource.icon
 
   return (
@@ -337,7 +289,7 @@ function ResourceCard({ resource }: { resource: Resource }) {
         </div>
         <div className="mt-auto pt-4 flex justify-end">
           <Button variant="outline" size="sm" asChild>
-            <Link href={`/resources/document/${resource.id}`}>Preview</Link>
+            <Link href={`/resources/document/${resource.id}?tab=${activeTab}`}>Preview</Link>
           </Button>
         </div>
       </CardContent>
@@ -345,7 +297,7 @@ function ResourceCard({ resource }: { resource: Resource }) {
   )
 }
 
-function DocumentCard({ document }: { document: Document }) {
+function DocumentCard({ document, activeTab }: { document: Document; activeTab: string }) {
   const iconMap = {
     doc: FileText,
     spreadsheet: FileSpreadsheet,
@@ -364,7 +316,6 @@ function DocumentCard({ document }: { document: Document }) {
           </div>
           <CardTitle className="text-base">{document.title}</CardTitle>
         </div>
-        {document.starred && <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />}
       </CardHeader>
       <CardContent>
         <div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -376,10 +327,10 @@ function DocumentCard({ document }: { document: Document }) {
         </div>
         <div className="mt-4 flex justify-end space-x-2">
           <Button variant="outline" size="sm" asChild>
-            <Link href={`/resources/document/${document.id}`}>View</Link>
+            <Link href={`/resources/document/${document.id}?tab=${activeTab}`}>View</Link>
           </Button>
           <Button size="sm" asChild>
-            <Link href={`/resources/editor?document=${document.id}`}>Edit</Link>
+            <Link href={`/resources/editor?document=${document.id}&tab=${activeTab}`}>Edit</Link>
           </Button>
         </div>
       </CardContent>

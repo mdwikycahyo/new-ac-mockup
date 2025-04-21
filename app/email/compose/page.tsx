@@ -1,33 +1,18 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  ArrowLeft,
-  Paperclip,
-  Bold,
-  Italic,
-  Underline,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  List,
-  ListOrdered,
-  Link2,
-  ImageIcon,
-  Smile,
-  AtSign,
-  Clock,
-  ChevronDown,
-  Send,
-} from "lucide-react"
+import { ArrowLeft, Paperclip, AtSign, Send, X } from "lucide-react"
 import Link from "next/link"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Badge } from "@/components/ui/badge"
+import { RichTextEditor } from "@/components/rich-text-editor"
 
 export default function ComposeEmailPage() {
   const [recipients, setRecipients] = useState<string[]>([])
@@ -35,6 +20,8 @@ export default function ComposeEmailPage() {
   const [content, setContent] = useState("")
   const [recipientInput, setRecipientInput] = useState("")
   const [showContactPicker, setShowContactPicker] = useState(false)
+  const [showDocumentSelector, setShowDocumentSelector] = useState(false)
+  const [attachedDocuments, setAttachedDocuments] = useState<Array<{ id: number; title: string; type: string }>>([])
 
   const handleAddRecipient = (recipient: string) => {
     if (recipient && !recipients.includes(recipient)) {
@@ -45,6 +32,15 @@ export default function ComposeEmailPage() {
 
   const handleRemoveRecipient = (recipient: string) => {
     setRecipients(recipients.filter((r) => r !== recipient))
+  }
+
+  const handleAttachDocument = (document: { id: number; title: string; type: string }) => {
+    setAttachedDocuments([...attachedDocuments, document])
+    setShowDocumentSelector(false)
+  }
+
+  const handleRemoveAttachment = (documentId: number) => {
+    setAttachedDocuments(attachedDocuments.filter((doc) => doc.id !== documentId))
   }
 
   const handleSend = () => {
@@ -80,9 +76,6 @@ export default function ComposeEmailPage() {
       </div>
 
       <Card>
-        <CardHeader className="border-b p-4">
-          <CardTitle>New Message</CardTitle>
-        </CardHeader>
         <CardContent className="p-0">
           <div className="border-b p-4">
             <div className="flex flex-wrap items-center gap-2">
@@ -164,95 +157,39 @@ export default function ComposeEmailPage() {
             />
           </div>
 
-          <div className="border-b p-2">
-            <Tabs defaultValue="compose">
-              <TabsList>
-                <TabsTrigger value="compose">Compose</TabsTrigger>
-                <TabsTrigger value="format">Format</TabsTrigger>
-                <TabsTrigger value="insert">Insert</TabsTrigger>
-                <TabsTrigger value="options">Options</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-
-          <div className="flex flex-wrap gap-1 border-b p-2">
-            <Button variant="ghost" size="sm">
-              <Bold className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <Italic className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <Underline className="h-4 w-4" />
-            </Button>
-            <div className="mx-1 h-4 w-px bg-border" />
-            <Button variant="ghost" size="sm">
-              <AlignLeft className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <AlignCenter className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <AlignRight className="h-4 w-4" />
-            </Button>
-            <div className="mx-1 h-4 w-px bg-border" />
-            <Button variant="ghost" size="sm">
-              <List className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <ListOrdered className="h-4 w-4" />
-            </Button>
-            <div className="mx-1 h-4 w-px bg-border" />
-            <Button variant="ghost" size="sm">
-              <Link2 className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <ImageIcon className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <Smile className="h-4 w-4" />
-            </Button>
-            <div className="ml-auto flex items-center gap-1">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-1">
-                    <Clock className="h-4 w-4" />
-                    <span className="text-xs">Normal</span>
-                    <ChevronDown className="h-3 w-3" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-40 p-0">
-                  <div className="p-1">
-                    <Button variant="ghost" size="sm" className="w-full justify-start">
-                      <span className="text-xs">Normal</span>
-                    </Button>
-                    <Button variant="ghost" size="sm" className="w-full justify-start">
-                      <span className="text-xs">Heading 1</span>
-                    </Button>
-                    <Button variant="ghost" size="sm" className="w-full justify-start">
-                      <span className="text-xs">Heading 2</span>
-                    </Button>
-                    <Button variant="ghost" size="sm" className="w-full justify-start">
-                      <span className="text-xs">Heading 3</span>
-                    </Button>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-
-          <div className="min-h-[300px] p-4">
-            <div
-              contentEditable
-              className="min-h-[300px] outline-none"
-              onInput={(e) => setContent(e.currentTarget.innerHTML)}
-              dangerouslySetInnerHTML={{ __html: content }}
+          <div className="min-h-[300px]">
+            <RichTextEditor
+              value={content}
+              onChange={setContent}
+              placeholder="Write your message here..."
+              minHeight="300px"
             />
           </div>
 
+          {attachedDocuments.length > 0 && (
+            <div className="border-t p-4">
+              <h3 className="text-sm font-medium mb-2">Attachments</h3>
+              <div className="flex flex-wrap gap-2">
+                {attachedDocuments.map((doc) => (
+                  <Badge key={doc.id} variant="secondary" className="flex items-center gap-1 py-1.5 px-3">
+                    {doc.title}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4 ml-1 p-0"
+                      onClick={() => handleRemoveAttachment(doc.id)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between border-t p-4">
             <div className="flex items-center gap-2">
-              <Button variant="outline">
+              <Button variant="outline" onClick={() => setShowDocumentSelector(true)}>
                 <Paperclip className="mr-2 h-4 w-4" /> Attach Files
               </Button>
             </div>
@@ -261,7 +198,6 @@ export default function ComposeEmailPage() {
               <Button variant="outline" asChild>
                 <Link href="/email">Cancel</Link>
               </Button>
-              <Button variant="outline">Save Draft</Button>
               <Button onClick={handleSend}>
                 <Send className="mr-2 h-4 w-4" /> Send
               </Button>
@@ -269,6 +205,10 @@ export default function ComposeEmailPage() {
           </div>
         </CardContent>
       </Card>
+
+      {showDocumentSelector && (
+        <DocumentSelectorModal onClose={() => setShowDocumentSelector(false)} onSelect={handleAttachDocument} />
+      )}
     </div>
   )
 }
@@ -295,3 +235,119 @@ const contacts = [
     email: "finance@example.com",
   },
 ]
+
+interface DocumentSelectorModalProps {
+  onClose: () => void
+  onSelect: (document: { id: number; title: string; type: string }) => void
+}
+
+function DocumentSelectorModal({ onClose, onSelect }: DocumentSelectorModalProps) {
+  const documents = [
+    { id: 1, title: "Quarterly Report Draft", type: "doc" },
+    { id: 2, title: "Project Timeline", type: "spreadsheet" },
+    { id: 3, title: "Marketing Presentation", type: "presentation" },
+    { id: 4, title: "Budget Analysis", type: "spreadsheet" },
+    { id: 5, title: "Meeting Notes", type: "doc" },
+  ]
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="w-full max-w-md rounded-lg bg-background p-6">
+        <h2 className="mb-4 text-xl font-bold">Select Document to Attach</h2>
+        <div className="max-h-[400px] overflow-y-auto">
+          <div className="space-y-2">
+            {documents.map((doc) => (
+              <div
+                key={doc.id}
+                className="flex cursor-pointer items-center justify-between rounded-md border p-3 hover:bg-accent"
+                onClick={() => onSelect(doc)}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="rounded-md bg-muted p-2">
+                    {doc.type === "doc" && <FileIcon className="h-4 w-4" />}
+                    {doc.type === "spreadsheet" && <SpreadsheetIcon className="h-4 w-4" />}
+                    {doc.type === "presentation" && <PresentationIcon className="h-4 w-4" />}
+                  </div>
+                  <span>{doc.title}</span>
+                </div>
+                <Button variant="ghost" size="sm">
+                  Select
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="mt-4 flex justify-end">
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FileIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+      <polyline points="14 2 14 8 20 8" />
+    </svg>
+  )
+}
+
+function SpreadsheetIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="8" y1="13" x2="16" y2="13" />
+      <line x1="8" y1="17" x2="16" y2="17" />
+      <line x1="8" y1="9" x2="10" y2="9" />
+    </svg>
+  )
+}
+
+function PresentationIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+      <polyline points="14 2 14 8 20 8" />
+      <path d="M9.5 12.5l.5 .5 2 -1.5" />
+      <path d="M9.5 17.5l.5 .5 2 -1.5" />
+    </svg>
+  )
+}

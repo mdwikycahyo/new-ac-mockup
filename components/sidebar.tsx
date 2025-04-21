@@ -46,7 +46,7 @@ const navItems = [
     icon: FolderOpen,
   },
   {
-    name: "Tasks",
+    name: "Project Management",
     href: "/tasks",
     icon: CheckSquare,
   },

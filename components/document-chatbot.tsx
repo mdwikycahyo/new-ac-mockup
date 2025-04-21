@@ -23,7 +23,7 @@ export function DocumentChatbot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      content: "Hello! I'm your document assistant. How can I help you understand this document better?",
+      content: "Hello! I'm your document assistant. How can I help you understand any provided documents better?",
       sender: "bot",
       timestamp: new Date(),
     },
@@ -108,7 +108,7 @@ export function DocumentChatbot() {
   return (
     <Card
       className={cn(
-        "fixed right-4 transition-all duration-200 shadow-lg",
+        "fixed right-4 z-50 transition-all duration-200 shadow-lg",
         isMinimized ? "bottom-4 h-14 w-64" : "bottom-4 h-[500px] w-80",
       )}
     >

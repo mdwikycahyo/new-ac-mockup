@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Search, Plus, Star, Inbox, Send, Archive, Trash, Tag } from "lucide-react"
 import Link from "next/link"
 
@@ -55,13 +54,10 @@ export default function EmailPage() {
 
         <Card className="md:col-span-3">
           <CardHeader className="p-4">
-            <Tabs defaultValue="primary">
-              <TabsList>
-                <TabsTrigger value="primary">Primary</TabsTrigger>
-                <TabsTrigger value="social">Social</TabsTrigger>
-                <TabsTrigger value="promotions">Promotions</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium">Inbox</h3>
+              <span className="text-sm text-muted-foreground">{emails.length} messages</span>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y">
@@ -83,7 +79,6 @@ interface Email {
   preview: string
   time: string
   read: boolean
-  starred: boolean
   priority?: "high" | "medium" | "low"
 }
 
@@ -95,7 +90,6 @@ const emails: Email[] = [
     preview: "Please review the attached quarterly report and provide feedback by EOD.",
     time: "10:30 AM",
     read: false,
-    starred: true,
     priority: "high",
   },
   {
@@ -105,7 +99,6 @@ const emails: Email[] = [
     preview: "We're organizing a team building event next Friday. Please confirm your attendance.",
     time: "Yesterday",
     read: false,
-    starred: false,
     priority: "medium",
   },
   {
@@ -115,7 +108,6 @@ const emails: Email[] = [
     preview: "The system will be down for maintenance this Saturday from 10 PM to 2 AM.",
     time: "2 days ago",
     read: true,
-    starred: false,
   },
   {
     id: 4,
@@ -124,7 +116,7 @@ const emails: Email[] = [
     preview: "Your budget request has been approved. The funds will be available next week.",
     time: "3 days ago",
     read: true,
-    starred: true,
+    priority: "high",
   },
   {
     id: 5,
@@ -133,7 +125,6 @@ const emails: Email[] = [
     preview: "Let's discuss the new marketing campaign strategy in our next meeting.",
     time: "1 week ago",
     read: true,
-    starred: false,
   },
 ]
 
@@ -143,11 +134,6 @@ function EmailItem({ email }: { email: Email }) {
       <div
         className={`flex cursor-pointer items-center gap-4 p-4 hover:bg-accent ${!email.read ? "bg-accent/50" : ""}`}
       >
-        <div className="flex-shrink-0">
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <Star className={`h-5 w-5 ${email.starred ? "fill-yellow-400 text-yellow-400" : ""}`} />
-          </Button>
-        </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between">
             <p className={`font-medium ${!email.read ? "font-semibold" : ""}`}>{email.sender}</p>
