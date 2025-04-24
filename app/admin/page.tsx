@@ -24,9 +24,9 @@ export default function AdminDashboard() {
           </p>
         </div>
         <Button asChild>
-          <Link href="/admin/scenarios2">
-            <Sparkles className="mr-2 h-4 w-4" />
-            View All Scenarios
+          <Link href="/admin/scenarios2/create">
+            <Plus className="mr-2 h-4 w-4" />
+            Create New Scenario
           </Link>
         </Button>
       </div>
@@ -54,13 +54,13 @@ export default function AdminDashboard() {
           href="/admin/reports"
         />
         <Card className="hover:border-primary/50 hover:shadow-sm">
-          <Link href="/admin/scenarios2/create">
+          <Link href="/admin/scenarios2">
             <CardContent className="flex flex-col items-center justify-center px-6 py-8 text-center">
               <div className="rounded-full bg-primary/10 p-3 mb-3">
-                <Plus className="h-8 w-8 text-primary" />
+                <Layers className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-lg font-medium">Create New Scenario</h3>
-              <p className="text-sm text-muted-foreground mt-1">Design a new assessment scenario</p>
+              <h3 className="text-lg font-medium">Manage Scenarios</h3>
+              <p className="text-sm text-muted-foreground mt-1">View and edit existing scenarios</p>
             </CardContent>
           </Link>
         </Card>
