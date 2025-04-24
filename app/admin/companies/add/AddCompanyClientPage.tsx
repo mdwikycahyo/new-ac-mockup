@@ -9,7 +9,7 @@ import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, Building2 } from "lucide-react"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { ImageUpload } from "@/components/ui/image-upload"
@@ -429,17 +429,18 @@ export default function AddCompanyClientPage() {
                     )}
                   />
                 </CardContent>
-                <CardFooter className="flex justify-between border-t px-6 py-4">
-                  <Button variant="outline" asChild>
-                    <Link href="/admin/companies">Cancel</Link>
-                  </Button>
-                  <Button type="submit" disabled={isSubmitting}>
-                    <Building2 className="mr-2 h-4 w-4" />
-                    {isSubmitting ? "Creating..." : "Create Company"}
-                  </Button>
-                </CardFooter>
               </Card>
             </div>
+          </div>
+
+          <div className="mt-6 flex items-center justify-end gap-4 border-t pt-6">
+            <Button variant="outline" asChild>
+              <Link href="/admin/companies">Cancel</Link>
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              <Building2 className="mr-2 h-4 w-4" />
+              {isSubmitting ? "Creating..." : "Create Company"}
+            </Button>
           </div>
         </form>
       </Form>

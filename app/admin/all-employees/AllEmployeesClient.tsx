@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -27,16 +28,26 @@ import {
   AlertCircle,
   Eye,
   Edit,
+  Building,
   Calendar,
   Trash2,
   Users,
 } from "lucide-react"
-import { BulkActionModal } from "@/components/admin/bulk-action-modals"
-import { DeleteEmployeeDialog } from "@/components/admin/delete-employee-dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { EmployeeActionModal } from "@/components/admin/employee-action-modals"
+import { DeleteEmployeeDialog } from "@/components/admin/delete-employee-dialog"
+
+// Mock companies data for filtering
+const companies = [
+  { id: "comp-001", name: "Acme Corporation" },
+  { id: "comp-002", name: "Globex Industries" },
+  { id: "comp-003", name: "Initech Systems" },
+  { id: "comp-004", name: "Massive Dynamic" },
+  { id: "comp-005", name: "Stark Industries" },
+]
 
 // Mock employees data
-const employees = [
+const allEmployees = [
   {
     id: "emp-001",
     name: "John Smith",
@@ -45,6 +56,8 @@ const employees = [
     department: "Product",
     status: "In Progress",
     accessRole: "Participant",
+    companyId: "comp-001",
+    companyName: "Acme Corporation",
     assessmentsAssigned: 3,
     assessmentsCompleted: 2,
     lastActive: "2023-10-15T14:30:00Z",
@@ -59,6 +72,8 @@ const employees = [
     department: "Engineering",
     status: "Confirmed",
     accessRole: "Participant",
+    companyId: "comp-001",
+    companyName: "Acme Corporation",
     assessmentsAssigned: 2,
     assessmentsCompleted: 0,
     lastActive: "2023-10-10T09:15:00Z",
@@ -68,11 +83,13 @@ const employees = [
   {
     id: "emp-003",
     name: "Michael Chen",
-    email: "michael.chen@acmecorp.com",
+    email: "michael.chen@globex-ind.com",
     role: "UX Designer",
     department: "Design",
     status: "Completed",
     accessRole: "Participant",
+    companyId: "comp-002",
+    companyName: "Globex Industries",
     assessmentsAssigned: 1,
     assessmentsCompleted: 1,
     lastActive: "2023-09-25T11:45:00Z",
@@ -82,11 +99,13 @@ const employees = [
   {
     id: "emp-004",
     name: "Emily Davis",
-    email: "emily.davis@acmecorp.com",
+    email: "emily.davis@initech.net",
     role: "Marketing Specialist",
     department: "Marketing",
     status: "Unconfirmed",
     accessRole: "Participant",
+    companyId: "comp-003",
+    companyName: "Initech Systems",
     assessmentsAssigned: 2,
     assessmentsCompleted: 0,
     lastActive: null,
@@ -96,15 +115,65 @@ const employees = [
   {
     id: "emp-005",
     name: "Robert Wilson",
-    email: "robert.wilson@acmecorp.com",
+    email: "robert.wilson@massivedynamic.org",
     role: "Sales Manager",
     department: "Sales",
     status: "Active",
     accessRole: "Administrator",
+    companyId: "comp-004",
+    companyName: "Massive Dynamic",
     assessmentsAssigned: 0,
     assessmentsCompleted: 0,
     lastActive: "2023-10-17T13:10:00Z",
     dateAdded: "2023-09-15T13:10:00Z",
+    avatar: "/placeholder.svg?height=40&width=40",
+  },
+  {
+    id: "emp-006",
+    name: "Jennifer Lee",
+    email: "jennifer.lee@stark-ind.com",
+    role: "HR Director",
+    department: "HR",
+    status: "Unconfirmed",
+    accessRole: "Administrator",
+    companyId: "comp-005",
+    companyName: "Stark Industries",
+    assessmentsAssigned: 0,
+    assessmentsCompleted: 0,
+    lastActive: null,
+    dateAdded: "2023-10-18T10:30:00Z",
+    avatar: "/placeholder.svg?height=40&width=40",
+  },
+  {
+    id: "emp-007",
+    name: "David Brown",
+    email: "david.brown@acmecorp.com",
+    role: "Backend Developer",
+    department: "Engineering",
+    status: "In Progress",
+    accessRole: "Participant",
+    companyId: "comp-001",
+    companyName: "Acme Corporation",
+    assessmentsAssigned: 2,
+    assessmentsCompleted: 1,
+    lastActive: "2023-10-16T11:20:00Z",
+    dateAdded: "2023-09-25T09:30:00Z",
+    avatar: "/placeholder.svg?height=40&width=40",
+  },
+  {
+    id: "emp-008",
+    name: "Lisa Wong",
+    email: "lisa.wong@globex-ind.com",
+    role: "Project Manager",
+    department: "Product",
+    status: "Completed",
+    accessRole: "Participant",
+    companyId: "comp-002",
+    companyName: "Globex Industries",
+    assessmentsAssigned: 3,
+    assessmentsCompleted: 3,
+    lastActive: "2023-10-12T15:45:00Z",
+    dateAdded: "2023-09-10T14:20:00Z",
     avatar: "/placeholder.svg?height=40&width=40",
   },
 ]
@@ -141,35 +210,67 @@ const formatDate = (dateString: string | null) => {
   }).format(date)
 }
 
-export default function CompanyEmployeesPageClient({ companyId }: { companyId: string }) {
-  const [selectedEmployees, setSelectedEmployees] = useState<typeof employees>([])
+export default function AllEmployeesClient() {
+  const searchParams = useSearchParams()
+  const companyFilter = searchParams.get("company")
+
+  const [selectedEmployees, setSelectedEmployees] = useState<typeof allEmployees>([])
   const [selectAll, setSelectAll] = useState(false)
   const [currentAction, setCurrentAction] = useState<"invite" | "assign" | "remove" | null>(null)
-  const [filteredEmployees, setFilteredEmployees] = useState<typeof employees>(employees)
+  const [filteredEmployees, setFilteredEmployees] = useState<typeof allEmployees>([])
   const [searchQuery, setSearchQuery] = useState("")
+  const [companyFilterValue, setCompanyFilterValue] = useState<string>(companyFilter || "all")
+  const [roleFilterValue, setRoleFilterValue] = useState<string>("all")
+  const [statusFilterValue, setStatusFilterValue] = useState<string>("all")
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedEmployee, setSelectedEmployee] = useState<{ id: string; name: string } | null>(null)
   const [actionModalOpen, setActionModalOpen] = useState(false)
   const [actionType, setActionType] = useState<"reminder" | "assign" | "invite" | "permissions" | null>(null)
-  const [actionEmployee, setActionEmployee] = useState<(typeof employees)[0] | null>(null)
+  const [actionEmployee, setActionEmployee] = useState<(typeof allEmployees)[0] | null>(null)
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query)
-    if (!query.trim()) {
-      setFilteredEmployees(employees)
-      return
+  // Apply filters when they change
+  useEffect(() => {
+    let result = [...allEmployees]
+
+    // Apply company filter
+    if (companyFilterValue !== "all") {
+      result = result.filter((employee) => employee.companyId === companyFilterValue)
     }
 
-    const lowercaseQuery = query.toLowerCase()
-    const filtered = employees.filter(
-      (employee) =>
-        employee.name.toLowerCase().includes(lowercaseQuery) ||
-        employee.email.toLowerCase().includes(lowercaseQuery) ||
-        employee.role.toLowerCase().includes(lowercaseQuery) ||
-        employee.department.toLowerCase().includes(lowercaseQuery),
-    )
-    setFilteredEmployees(filtered)
-  }
+    // Apply role filter
+    if (roleFilterValue !== "all") {
+      result = result.filter((employee) => employee.accessRole === roleFilterValue)
+    }
+
+    // Apply status filter
+    if (statusFilterValue !== "all") {
+      result = result.filter((employee) => employee.status.toLowerCase() === statusFilterValue.toLowerCase())
+    }
+
+    // Apply search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      result = result.filter(
+        (employee) =>
+          employee.name.toLowerCase().includes(query) ||
+          employee.email.toLowerCase().includes(query) ||
+          employee.role.toLowerCase().includes(query) ||
+          employee.department.toLowerCase().includes(query) ||
+          employee.companyName.toLowerCase().includes(query),
+      )
+    }
+
+    setFilteredEmployees(result)
+  }, [companyFilterValue, roleFilterValue, statusFilterValue, searchQuery])
+
+  // Initialize filtered employees on component mount
+  useEffect(() => {
+    let initialEmployees = [...allEmployees]
+    if (companyFilter) {
+      initialEmployees = initialEmployees.filter((employee) => employee.companyId === companyFilter)
+    }
+    setFilteredEmployees(initialEmployees)
+  }, [companyFilter])
 
   const handleSelectAll = () => {
     if (selectAll) {
@@ -180,7 +281,7 @@ export default function CompanyEmployeesPageClient({ companyId }: { companyId: s
     setSelectAll(!selectAll)
   }
 
-  const handleSelectEmployee = (employee: (typeof employees)[0]) => {
+  const handleSelectEmployee = (employee: (typeof allEmployees)[0]) => {
     if (selectedEmployees.some((e) => e.id === employee.id)) {
       setSelectedEmployees(selectedEmployees.filter((e) => e.id !== employee.id))
       setSelectAll(false)
@@ -207,7 +308,7 @@ export default function CompanyEmployeesPageClient({ companyId }: { companyId: s
 
   const handleEmployeeAction = (
     type: "reminder" | "assign" | "invite" | "permissions",
-    employee: (typeof employees)[0],
+    employee: (typeof allEmployees)[0],
   ) => {
     setActionType(type)
     setActionEmployee(employee)
@@ -215,15 +316,15 @@ export default function CompanyEmployeesPageClient({ companyId }: { companyId: s
   }
 
   return (
-    <div>
+    <div className="container mx-auto p-6">
       <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Employees</h2>
-          <p className="text-muted-foreground">Manage employees for this company</p>
+          <h1 className="text-3xl font-bold tracking-tight">All Employees</h1>
+          <p className="text-muted-foreground">Manage all employees across companies</p>
         </div>
         <div className="flex gap-2">
           <Button asChild>
-            <Link href={`/admin/companies/${companyId}/participants/add`}>
+            <Link href="/admin/all-employees/add">
               <Plus className="mr-2 h-4 w-4" />
               Add Employee
             </Link>
@@ -234,7 +335,7 @@ export default function CompanyEmployeesPageClient({ companyId }: { companyId: s
       <Card className="mb-6">
         <CardHeader className="pb-3">
           <CardTitle>Employee Management</CardTitle>
-          <CardDescription>View and manage employees for this company</CardDescription>
+          <CardDescription>View and manage all employees across companies</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -246,36 +347,60 @@ export default function CompanyEmployeesPageClient({ companyId }: { companyId: s
                   placeholder="Search employees..."
                   className="pl-8"
                   value={searchQuery}
-                  onChange={(e) => handleSearch(e.target.value)}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
+              <Select value={companyFilterValue} onValueChange={setCompanyFilterValue}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by company" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Companies</SelectItem>
+                  {companies.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="icon">
                     <Filter className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[200px]">
+                <DropdownMenuContent align="end" className="w-[220px]">
                   <div className="p-2">
                     <p className="mb-2 text-sm font-medium">Filter Options</p>
                     <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="filter-admin" />
-                        <label htmlFor="filter-admin" className="text-sm font-medium">
-                          Administrators
-                        </label>
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground">Role</p>
+                        <Select value={roleFilterValue} onValueChange={setRoleFilterValue}>
+                          <SelectTrigger className="h-8 w-full">
+                            <SelectValue placeholder="Select role" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Roles</SelectItem>
+                            <SelectItem value="Participant">Participant</SelectItem>
+                            <SelectItem value="Administrator">Administrator</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="filter-participant" />
-                        <label htmlFor="filter-participant" className="text-sm font-medium">
-                          Participants
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="filter-unconfirmed" />
-                        <label htmlFor="filter-unconfirmed" className="text-sm font-medium">
-                          Unconfirmed
-                        </label>
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground">Status</p>
+                        <Select value={statusFilterValue} onValueChange={setStatusFilterValue}>
+                          <SelectTrigger className="h-8 w-full">
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Statuses</SelectItem>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="in progress">In Progress</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="confirmed">Confirmed</SelectItem>
+                            <SelectItem value="unconfirmed">Unconfirmed</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </div>
@@ -322,7 +447,9 @@ export default function CompanyEmployeesPageClient({ companyId }: { companyId: s
                 <Checkbox checked={selectAll} onCheckedChange={handleSelectAll} aria-label="Select all employees" />
               </TableHead>
               <TableHead className="w-[250px]">Employee</TableHead>
-              <TableHead>Role</TableHead>
+              <TableHead>Company</TableHead>
+              <TableHead>Access Role</TableHead>
+              <TableHead>Department</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Date Added</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -331,8 +458,8 @@ export default function CompanyEmployeesPageClient({ companyId }: { companyId: s
           <TableBody>
             {filteredEmployees.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
-                  No employees found matching your search.
+                <TableCell colSpan={8} className="h-24 text-center">
+                  No employees found matching your filters.
                 </TableCell>
               </TableRow>
             ) : (
@@ -363,9 +490,20 @@ export default function CompanyEmployeesPageClient({ companyId }: { companyId: s
                     </div>
                   </TableCell>
                   <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Building className="h-4 w-4 text-muted-foreground" />
+                      <span>{employee.companyName}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={employee.accessRole === "Administrator" ? "default" : "outline"}>
+                      {employee.accessRole}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
                     <div className="text-sm">
-                      {employee.role}
-                      <div className="text-xs text-muted-foreground">{employee.department}</div>
+                      {employee.department}
+                      <div className="text-xs text-muted-foreground">{employee.role}</div>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -389,15 +527,13 @@ export default function CompanyEmployeesPageClient({ companyId }: { companyId: s
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem asChild>
-                            <Link
-                              href={`/admin/companies/${companyId}/participants/${employee.id}?from=company&companyId=${companyId}`}
-                            >
+                            <Link href={`/admin/all-employees/${employee.id}?from=list`}>
                               <Eye className="mr-2 h-4 w-4" />
                               View Details
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
-                            <Link href={`/admin/all-employees/${employee.id}/edit?from=company&companyId=${companyId}`}>
+                            <Link href={`/admin/all-employees/${employee.id}/edit?from=list`}>
                               <Edit className="mr-2 h-4 w-4" />
                               Edit Employee
                             </Link>
@@ -469,8 +605,31 @@ export default function CompanyEmployeesPageClient({ companyId }: { companyId: s
         </Table>
       </div>
 
+      <div className="mt-4 flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
+          Showing <strong>{filteredEmployees.length}</strong> of <strong>{allEmployees.length}</strong> employees
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" disabled>
+            Previous
+          </Button>
+          <Button variant="outline" size="sm" className="bg-primary text-primary-foreground">
+            1
+          </Button>
+          <Button variant="outline" size="sm">
+            2
+          </Button>
+          <Button variant="outline" size="sm">
+            3
+          </Button>
+          <Button variant="outline" size="sm">
+            Next
+          </Button>
+        </div>
+      </div>
+
       {currentAction && (
-        <BulkActionModal
+        <EmployeeActionModal
           isOpen={true}
           onClose={closeModal}
           selectedEmployees={selectedEmployees}
@@ -484,7 +643,7 @@ export default function CompanyEmployeesPageClient({ companyId }: { companyId: s
           onOpenChange={setDeleteDialogOpen}
           employeeId={selectedEmployee.id}
           employeeName={selectedEmployee.name}
-          redirectUrl={`/admin/companies/${companyId}?tab=employees`}
+          redirectUrl="/admin/all-employees"
         />
       )}
 
