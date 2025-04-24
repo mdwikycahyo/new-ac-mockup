@@ -1064,7 +1064,7 @@ export default function SimulationBuilder() {
 
       {/* AI Persona Selection Dialog */}
       <Dialog open={showPersonaDialog} onOpenChange={setShowPersonaDialog}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Configure AI Personas</DialogTitle>
             <DialogDescription>Select and configure the AI personas for this interaction</DialogDescription>
@@ -1151,6 +1151,23 @@ export default function SimulationBuilder() {
                       )
                     })}
                   </RadioGroup>
+
+                  {initialMessagePersona && (
+                    <div className="space-y-2 mt-4 border-t pt-4">
+                      <Label htmlFor={`starter-message`}>Initial Message for Conversation Starter</Label>
+                      <Textarea
+                        id={`starter-message`}
+                        placeholder={`Enter initial message for the conversation starter...`}
+                        value={personaInitialMessages[initialMessagePersona] || ""}
+                        onChange={(e) => handlePersonaInitialMessageChange(initialMessagePersona, e.target.value)}
+                        rows={3}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        This message will be sent by {getPersonaNameById(initialMessagePersona)} to start the group
+                        conversation
+                      </p>
+                    </div>
+                  )}
                 </>
               ) : (
                 <>

@@ -14,7 +14,6 @@ import {
   Mail,
   MessageSquare,
   Search,
-  Users,
   Video,
   X,
   Phone,

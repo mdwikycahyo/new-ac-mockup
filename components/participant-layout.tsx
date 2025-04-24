@@ -2,13 +2,13 @@
 
 import React from "react"
 import { usePathname } from "next/navigation"
-import { Sidebar } from "./sidebar"
-import { DocumentChatbot } from "./document-chatbot"
+import { Sidebar } from "@/components/sidebar"
+import { DocumentChatbot } from "@/components/document-chatbot"
 
 export function ParticipantLayout({ children }: { children: React.ReactNode }) {
   // This is a client component that conditionally renders the sidebar
   // based on the current path
-  const pathname = usePathname() || ""
+  const pathname = usePathname?.() || ""
 
   // Don't show the participant sidebar in admin routes
   if (pathname.startsWith("/admin")) {

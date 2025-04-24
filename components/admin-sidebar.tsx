@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { BarChart2, Home, HelpCircle, Menu, X, Users, Settings, Sparkles } from "lucide-react"
+import { BarChart2, Home, HelpCircle, Menu, X, Users, Settings, Sparkles, Building2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const navItems = [
@@ -12,6 +12,11 @@ const navItems = [
     name: "Dashboard",
     href: "/admin",
     icon: Home,
+  },
+  {
+    name: "Companies",
+    href: "/admin/companies",
+    icon: Building2,
   },
   {
     name: "Participants",

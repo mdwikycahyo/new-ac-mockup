@@ -10,7 +10,7 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Workplace Assessment Platform",
   description: "A comprehensive workplace assessment platform",
-    generator: 'v0.dev'
+  generator: "v0.dev",
 }
 
 export default function RootLayout({
@@ -22,17 +22,11 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <ClientLayout>{children}</ClientLayout>
+          <div className="flex min-h-screen">
+            <ParticipantLayout>{children}</ParticipantLayout>
+          </div>
         </ThemeProvider>
       </body>
     </html>
-  )
-}
-
-function ClientLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex min-h-screen">
-      <ParticipantLayout>{children}</ParticipantLayout>
-    </div>
   )
 }

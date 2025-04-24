@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ArrowLeft, Check } from "lucide-react"
 import Link from "next/link"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Badge } from "@/components/ui/badge"
 
 export default function AddParticipantPage() {
   return (
@@ -61,42 +62,44 @@ export default function AddParticipantPage() {
         <Card>
           <CardHeader>
             <CardTitle>Scenario Assignment</CardTitle>
-            <CardDescription>Assign scenarios to this participant</CardDescription>
+            <CardDescription>Assign published scenarios to this participant</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
-              <Label>Available Scenarios</Label>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="scenario1" />
-                  <Label htmlFor="scenario1" className="font-normal">
-                    Technical Skills Scenario
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="scenario2" />
-                  <Label htmlFor="scenario2" className="font-normal">
-                    Leadership Scenario
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="scenario3" />
-                  <Label htmlFor="scenario3" className="font-normal">
-                    Project Management Scenario
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="scenario4" />
-                  <Label htmlFor="scenario4" className="font-normal">
-                    Customer Service Scenario
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="scenario5" />
-                  <Label htmlFor="scenario5" className="font-normal">
-                    Communication Skills Scenario
-                  </Label>
-                </div>
+              <Label>Available Published Scenarios</Label>
+              <div className="max-h-[300px] overflow-y-auto pr-2 rounded-md border">
+                {publishedScenarios.length === 0 ? (
+                  <div className="text-sm text-muted-foreground p-4 text-center">
+                    No published scenarios available. Please publish scenarios first.
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {publishedScenarios.map((scenario) => (
+                      <div key={scenario.id} className="p-3 hover:bg-muted/50">
+                        <div className="flex items-start">
+                          <Checkbox id={`scenario-${scenario.id}`} className="mt-1" />
+                          <div className="ml-3 flex-1">
+                            <Label htmlFor={`scenario-${scenario.id}`} className="font-medium cursor-pointer">
+                              {scenario.name}
+                            </Label>
+                            <div className="flex items-center mt-1 gap-2">
+                              <Badge variant="outline" className="text-xs font-normal">
+                                {scenario.type}
+                              </Badge>
+                              <Badge variant="outline" className="text-xs font-normal">
+                                {scenario.duration} min
+                              </Badge>
+                              <Badge variant="outline" className="text-xs font-normal">
+                                {scenario.difficulty}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{scenario.description}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -140,3 +143,74 @@ export default function AddParticipantPage() {
     </div>
   )
 }
+
+// Sample published scenarios data - in a real app, this would come from an API
+const publishedScenarios = [
+  {
+    id: "1",
+    name: "Technical Skills Assessment",
+    type: "Technical Skills",
+    description:
+      "Evaluates core technical competencies through a series of practical challenges and problem-solving tasks.",
+    duration: 45,
+    difficulty: "Intermediate",
+  },
+  {
+    id: "2",
+    name: "Leadership Challenge",
+    type: "Leadership",
+    description: "Tests leadership abilities through team management scenarios and decision-making exercises.",
+    duration: 60,
+    difficulty: "Advanced",
+  },
+  {
+    id: "3",
+    name: "Project Management Simulation",
+    type: "Project Management",
+    description:
+      "Simulates a complex project with resource constraints, timeline challenges, and stakeholder management.",
+    duration: 90,
+    difficulty: "Advanced",
+  },
+  {
+    id: "4",
+    name: "Customer Service Scenario",
+    type: "Customer Service",
+    description:
+      "Evaluates customer service skills through realistic customer interaction scenarios and complaint handling.",
+    duration: 30,
+    difficulty: "Beginner",
+  },
+  {
+    id: "5",
+    name: "Communication Skills Evaluation",
+    type: "Communication",
+    description: "Assesses written and verbal communication skills through various business communication tasks.",
+    duration: 40,
+    difficulty: "Intermediate",
+  },
+  {
+    id: "6",
+    name: "Data Analysis Challenge",
+    type: "Analytics",
+    description: "Tests ability to analyze complex datasets and draw meaningful business insights.",
+    duration: 50,
+    difficulty: "Intermediate",
+  },
+  {
+    id: "7",
+    name: "Crisis Management Simulation",
+    type: "Management",
+    description: "Evaluates decision-making under pressure through simulated business crisis scenarios.",
+    duration: 75,
+    difficulty: "Expert",
+  },
+  {
+    id: "8",
+    name: "Sales Pitch Assessment",
+    type: "Sales",
+    description: "Assesses sales techniques and persuasion skills through realistic sales scenarios.",
+    duration: 35,
+    difficulty: "Intermediate",
+  },
+]
