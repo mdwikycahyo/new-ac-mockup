@@ -19,6 +19,11 @@ const navItems = [
     icon: Building2,
   },
   {
+    name: "All Employees",
+    href: "/admin/all-employees",
+    icon: Users,
+  },
+  {
     name: "Participants",
     href: "/admin/participants",
     icon: Users,

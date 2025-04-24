@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, Save } from "lucide-react"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { ImageUpload } from "@/components/ui/image-upload"
@@ -94,6 +94,9 @@ const fetchCompany = async (id: string): Promise<CompanyFormValues> => {
 
 export default function EditCompanyClientPage({ params }: { params: { id: string } }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const fromList = searchParams.get("from") === "list"
+
   const [industries, setIndustries] = useState(initialIndustries)
   const [newIndustry, setNewIndustry] = useState("")
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
@@ -197,8 +200,12 @@ export default function EditCompanyClientPage({ params }: { params: { id: string
         description: `${data.name} has been successfully updated.`,
       })
 
-      // Redirect to company details
-      router.push(`/admin/companies/${params.id}`)
+      // Redirect based on where the user came from
+      if (fromList) {
+        router.push("/admin/companies")
+      } else {
+        router.push(`/admin/companies/${params.id}`)
+      }
     } catch (error) {
       console.error("Error updating company:", error)
       toast({
@@ -238,15 +245,16 @@ export default function EditCompanyClientPage({ params }: { params: { id: string
 
   return (
     <div className="container mx-auto p-6">
-      <div className="mb-6">
-        <Button variant="ghost" asChild className="mb-4">
-          <Link href={`/admin/companies/${params.id}`}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Company Details
+      <div className="mb-6 flex items-center gap-4">
+        <Button variant="outline" size="icon" asChild>
+          <Link href={fromList ? "/admin/companies" : `/admin/companies/${params.id}`}>
+            <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <h1 className="text-3xl font-bold tracking-tight">Edit Company</h1>
-        <p className="text-muted-foreground">Update information for {form.watch("name")}</p>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Edit Company</h1>
+          <p className="text-muted-foreground">Update information for {form.watch("name")}</p>
+        </div>
       </div>
 
       <Form {...form}>
@@ -516,17 +524,18 @@ export default function EditCompanyClientPage({ params }: { params: { id: string
                     )}
                   />
                 </CardContent>
-                <CardFooter className="flex justify-between border-t px-6 py-4">
-                  <Button variant="outline" asChild>
-                    <Link href={`/admin/companies/${params.id}`}>Cancel</Link>
-                  </Button>
-                  <Button type="submit" disabled={isSubmitting}>
-                    <Save className="mr-2 h-4 w-4" />
-                    {isSubmitting ? "Saving..." : "Save Changes"}
-                  </Button>
-                </CardFooter>
               </Card>
             </div>
+          </div>
+
+          <div className="mt-6 flex items-center justify-end gap-4 border-t pt-6">
+            <Button variant="outline" asChild>
+              <Link href={fromList ? "/admin/companies" : `/admin/companies/${params.id}`}>Cancel</Link>
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              <Save className="mr-2 h-4 w-4" />
+              {isSubmitting ? "Saving..." : "Save Changes"}
+            </Button>
           </div>
         </form>
       </Form>
