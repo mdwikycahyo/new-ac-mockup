@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import type React from "react"
 import { usePathname } from "next/navigation"
 import { Sidebar } from "@/components/sidebar"
 import { DocumentChatbot } from "@/components/document-chatbot"
@@ -22,4 +22,4 @@ export function ParticipantLayout({ children }: { children: React.ReactNode }) {
       <DocumentChatbot />
     </>
   )
-} 
+}
