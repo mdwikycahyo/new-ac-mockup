@@ -16,6 +16,7 @@ import {
   HelpCircle,
   Menu,
   X,
+  Users,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -26,19 +27,29 @@ const navItems = [
     icon: Home,
   },
   {
-    name: "Email",
-    href: "/email",
-    icon: Mail,
-  },
-  {
     name: "Chat",
     href: "/chat",
     icon: MessageSquare,
   },
   {
+    name: "Email",
+    href: "/email",
+    icon: Mail,
+  },
+  {
+    name: "Team",
+    href: "/team",
+    icon: Users,
+  },
+  {
     name: "Calendar",
     href: "/calendar",
     icon: Calendar,
+  },
+  {
+    name: "Conference",
+    href: "/conference",
+    icon: Video,
   },
   {
     name: "Resources",
@@ -49,11 +60,6 @@ const navItems = [
     name: "Project Management",
     href: "/tasks",
     icon: CheckSquare,
-  },
-  {
-    name: "Conference",
-    href: "/conference",
-    icon: Video,
   },
   {
     name: "Results",
