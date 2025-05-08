@@ -76,7 +76,7 @@ export function DocumentSelectorModal({ open, onClose, onSelect }: DocumentSelec
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>{t("attach_files")}</DialogTitle>
+          <DialogTitle>Attach File</DialogTitle>
           <DialogDescription>Select a document from your files to attach</DialogDescription>
         </DialogHeader>
 

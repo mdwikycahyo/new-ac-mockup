@@ -1,11 +1,47 @@
+"use client"
+
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Search, Send } from "lucide-react"
+import { Search, Send, Paperclip, X } from "lucide-react"
+import { DocumentSelectorModal } from "@/components/document-selector-modal"
 
 export default function ChatPage() {
+  const [selectedContact, setSelectedContact] = useState(contacts[0])
+  const [messageInput, setMessageInput] = useState("")
+  const [chatMessages, setChatMessages] = useState(messages)
+  const [documentSelectorOpen, setDocumentSelectorOpen] = useState(false)
+  const [attachedDocuments, setAttachedDocuments] = useState<Document[]>([])
+
+  const handleSendMessage = () => {
+    if (messageInput.trim() === "" && attachedDocuments.length === 0) return
+
+    const newMessage = {
+      id: chatMessages.length + 1,
+      sender: "user",
+      content: messageInput,
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      read: false,
+      attachments: attachedDocuments,
+    }
+
+    setChatMessages([...chatMessages, newMessage])
+    setMessageInput("")
+    setAttachedDocuments([])
+  }
+
+  const handleSelectDocument = (document: Document) => {
+    setAttachedDocuments([...attachedDocuments, document])
+    setDocumentSelectorOpen(false)
+  }
+
+  const handleRemoveAttachment = (documentId: number) => {
+    setAttachedDocuments(attachedDocuments.filter((doc) => doc.id !== documentId))
+  }
+
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6">
@@ -13,7 +49,7 @@ export default function ChatPage() {
         <p className="text-muted-foreground">Communicate with your team members in real-time</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <Card className="md:col-span-1">
           <CardHeader className="p-4">
             <CardTitle>Contacts</CardTitle>
@@ -26,45 +62,100 @@ export default function ChatPage() {
             <ScrollArea className="h-[calc(100vh-300px)]">
               <div className="space-y-1 p-2">
                 {contacts.map((contact) => (
-                  <ContactItem key={contact.id} contact={contact} active={contact.id === 1} />
+                  <ContactItem
+                    key={contact.id}
+                    contact={contact}
+                    active={contact.id === selectedContact.id}
+                    onClick={() => setSelectedContact(contact)}
+                  />
                 ))}
               </div>
             </ScrollArea>
           </CardContent>
         </Card>
 
-        <Card className="flex flex-col md:col-span-3">
+        <Card className="flex flex-col md:col-span-2">
           <CardHeader className="border-b p-4">
             <div className="flex items-center gap-3">
               <Avatar>
                 <AvatarImage src="/placeholder.svg?height=40&width=40" />
-                <AvatarFallback>PM</AvatarFallback>
+                <AvatarFallback>
+                  {selectedContact.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")}
+                </AvatarFallback>
               </Avatar>
               <div>
-                <CardTitle>Project Manager</CardTitle>
-                <CardDescription>Online</CardDescription>
+                <CardTitle>{selectedContact.name}</CardTitle>
+                <CardDescription>
+                  {selectedContact.status === "online"
+                    ? "Online"
+                    : selectedContact.status === "away"
+                      ? "Away"
+                      : "Offline"}
+                </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="flex-1 p-0">
             <ScrollArea className="h-[calc(100vh-350px)]">
               <div className="space-y-4 p-4">
-                {messages.map((message) => (
+                {chatMessages.map((message) => (
                   <MessageItem key={message.id} message={message} />
                 ))}
               </div>
             </ScrollArea>
           </CardContent>
           <div className="border-t p-4">
+            {/* Attached documents preview */}
+            {attachedDocuments.length > 0 && (
+              <div className="mb-3 flex flex-wrap gap-2">
+                {attachedDocuments.map((doc) => (
+                  <div key={doc.id} className="flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-sm">
+                    <Paperclip className="h-3 w-3" />
+                    <span>{doc.title}</span>
+                    <button
+                      className="ml-1 rounded-full hover:bg-accent-foreground/10"
+                      onClick={() => handleRemoveAttachment(doc.id)}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="flex items-center gap-2">
-              <Input placeholder="Type your message..." className="flex-1" />
-              <Button size="icon">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setDocumentSelectorOpen(true)}
+                title="Attach document"
+              >
+                <Paperclip className="h-4 w-4" />
+              </Button>
+              <Input
+                placeholder="Type your message..."
+                className="flex-1"
+                value={messageInput}
+                onChange={(e) => setMessageInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSendMessage()
+                }}
+              />
+              <Button size="icon" onClick={handleSendMessage}>
                 <Send className="h-4 w-4" />
               </Button>
             </div>
           </div>
         </Card>
       </div>
+
+      <DocumentSelectorModal
+        open={documentSelectorOpen}
+        onClose={() => setDocumentSelectorOpen(false)}
+        onSelect={handleSelectDocument}
+      />
     </div>
   )
 }
@@ -115,13 +206,16 @@ const contacts: Contact[] = [
 function ContactItem({
   contact,
   active,
+  onClick,
 }: {
   contact: Contact
   active: boolean
+  onClick: () => void
 }) {
   return (
     <div
       className={`flex cursor-pointer items-center gap-3 rounded-md p-3 ${active ? "bg-accent" : "hover:bg-accent/50"}`}
+      onClick={onClick}
     >
       <div className="relative">
         <Avatar>
@@ -154,12 +248,21 @@ function ContactItem({
   )
 }
 
+interface Document {
+  id: number
+  title: string
+  type: "doc" | "spreadsheet" | "presentation" | "report"
+  lastModified: string
+  owner: string
+}
+
 interface Message {
   id: number
   sender: "user" | "other"
   content: string
   time: string
   read?: boolean
+  attachments?: Document[]
 }
 
 const messages: Message[] = [
@@ -225,6 +328,19 @@ function MessageItem({ message }: { message: Message }) {
         }`}
       >
         <p>{message.content}</p>
+
+        {/* Display attachments if any */}
+        {message.attachments && message.attachments.length > 0 && (
+          <div className="mt-2 space-y-2">
+            {message.attachments.map((doc) => (
+              <div key={doc.id} className="flex items-center gap-2 rounded bg-background/20 p-2 text-sm">
+                <Paperclip className="h-3 w-3" />
+                <span className="font-medium">{doc.title}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         <p className={`mt-1 text-right text-xs ${isUser ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
           {message.time}
         </p>

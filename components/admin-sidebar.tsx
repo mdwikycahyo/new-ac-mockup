@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { BarChart2, Home, HelpCircle, Menu, X, Users, Settings, Sparkles, Building2 } from "lucide-react"
+import { BarChart2, Home, HelpCircle, Menu, X, Users, Settings, Sparkles, Building2, User, UserCog } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const navItems = [
@@ -42,6 +42,8 @@ const navItems = [
 
 export function AdminSidebar() {
   const pathname = usePathname()
+  const isAdmin = pathname.startsWith("/admin")
+
   const [isOpen, setIsOpen] = useState(false)
 
   return (
@@ -96,6 +98,12 @@ export function AdminSidebar() {
               <Link href="/admin/help">
                 <HelpCircle className="mr-2 h-5 w-5" />
                 Help & Support
+              </Link>
+            </Button>
+            <Button variant="outline" className="mt-2 w-full justify-start" asChild>
+              <Link href="/">
+                {isAdmin ? <User className="mr-2 h-5 w-5" /> : <UserCog className="mr-2 h-5 w-5" />}
+                {isAdmin ? "Switch to Participant" : "Switch to Admin"}
               </Link>
             </Button>
           </div>

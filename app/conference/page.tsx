@@ -111,7 +111,6 @@ export default function ConferencePage() {
                       </div>
                       <div className="flex h-full items-center justify-center">
                         <Avatar className="h-24 w-24">
-                          <AvatarImage src="/placeholder.svg?height=96&width=96" />
                           <AvatarFallback>PM</AvatarFallback>
                         </Avatar>
                       </div>
@@ -123,7 +122,6 @@ export default function ConferencePage() {
                       </div>
                       <div className="flex h-full items-center justify-center">
                         <Avatar className="h-24 w-24">
-                          <AvatarImage src="/placeholder.svg?height=96&width=96" />
                           <AvatarFallback>YO</AvatarFallback>
                         </Avatar>
                       </div>
@@ -135,7 +133,6 @@ export default function ConferencePage() {
                       </div>
                       <div className="flex h-full items-center justify-center">
                         <Avatar className="h-24 w-24">
-                          <AvatarImage src="/placeholder.svg?height=96&width=96" />
                           <AvatarFallback>ML</AvatarFallback>
                         </Avatar>
                       </div>
@@ -147,7 +144,6 @@ export default function ConferencePage() {
                       </div>
                       <div className="flex h-full items-center justify-center">
                         <Avatar className="h-24 w-24">
-                          <AvatarImage src="/placeholder.svg?height=96&width=96" />
                           <AvatarFallback>DE</AvatarFallback>
                         </Avatar>
                       </div>
@@ -162,7 +158,6 @@ export default function ConferencePage() {
                       </div>
                       <div className="flex h-full items-center justify-center">
                         <Avatar className="h-40 w-40">
-                          <AvatarImage src="/placeholder.svg?height=160&width=160" />
                           <AvatarFallback>PM</AvatarFallback>
                         </Avatar>
                       </div>
@@ -171,7 +166,6 @@ export default function ConferencePage() {
                       <div className="relative flex-1 rounded-lg bg-muted p-2">
                         <div className="flex items-center justify-center">
                           <Avatar className="h-12 w-12">
-                            <AvatarImage src="/placeholder.svg?height=48&width=48" />
                             <AvatarFallback>YO</AvatarFallback>
                           </Avatar>
                         </div>
@@ -180,7 +174,6 @@ export default function ConferencePage() {
                       <div className="relative flex-1 rounded-lg bg-muted p-2">
                         <div className="flex items-center justify-center">
                           <Avatar className="h-12 w-12">
-                            <AvatarImage src="/placeholder.svg?height=48&width=48" />
                             <AvatarFallback>ML</AvatarFallback>
                           </Avatar>
                         </div>
@@ -189,7 +182,6 @@ export default function ConferencePage() {
                       <div className="relative flex-1 rounded-lg bg-muted p-2">
                         <div className="flex items-center justify-center">
                           <Avatar className="h-12 w-12">
-                            <AvatarImage src="/placeholder.svg?height=48&width=48" />
                             <AvatarFallback>DE</AvatarFallback>
                           </Avatar>
                         </div>
@@ -389,7 +381,7 @@ export default function ConferencePage() {
                     {participants.map((participant) => (
                       <div key={participant.id} className="flex items-center gap-3 p-3">
                         <Avatar>
-                          <AvatarImage src={participant.avatar || "/placeholder.svg?height=40&width=40"} />
+                          {participant.avatar && <AvatarImage src={participant.avatar || "/placeholder.svg"} />}
                           <AvatarFallback>
                             {participant.name
                               .split(" ")
