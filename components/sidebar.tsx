@@ -62,7 +62,7 @@ const navItems = [
   },
   {
     name: "Call",
-    href: "/conference",
+    href: "/conference/select",
     icon: Phone,
   },
   {

@@ -109,7 +109,7 @@ export function DocumentChatbot() {
     <Card
       className={cn(
         "fixed right-4 z-50 transition-all duration-200 shadow-lg",
-        isMinimized ? "bottom-4 h-14 w-64" : "bottom-4 h-[500px] w-80",
+        isMinimized ? "bottom-4 h-14 w-64" : "bottom-4 h-[500px] w-96",
       )}
     >
       <CardHeader className="border-b p-3">
@@ -137,44 +137,46 @@ export function DocumentChatbot() {
 
       {!isMinimized && (
         <>
-          <CardContent className="flex-1 overflow-y-auto p-3">
-            <div className="space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={cn("flex", message.sender === "user" ? "justify-end" : "justify-start")}
-                >
-                  <div className="flex items-start gap-2 max-w-[80%]">
-                    {message.sender === "bot" && (
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src="/placeholder.svg?height=32&width=32" />
-                        <AvatarFallback>AI</AvatarFallback>
-                      </Avatar>
-                    )}
-                    <div
-                      className={cn(
-                        "rounded-lg p-3",
-                        message.sender === "user" ? "bg-primary text-primary-foreground" : "bg-muted",
+          <CardContent className="flex-1 overflow-hidden p-0 flex flex-col h-[calc(500px-80px)]">
+            <div className="flex-1 overflow-y-auto p-3">
+              <div className="space-y-4">
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={cn("flex", message.sender === "user" ? "justify-end" : "justify-start")}
+                  >
+                    <div className="flex items-start gap-2 max-w-[80%]">
+                      {message.sender === "bot" && (
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src="/placeholder.svg?height=32&width=32" />
+                          <AvatarFallback>AI</AvatarFallback>
+                        </Avatar>
                       )}
-                    >
-                      <p className="text-sm">{message.content}</p>
-                      <p className="mt-1 text-right text-xs opacity-70">
-                        {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                      </p>
+                      <div
+                        className={cn(
+                          "rounded-lg p-3",
+                          message.sender === "user" ? "bg-primary text-primary-foreground" : "bg-muted",
+                        )}
+                      >
+                        <p className="text-sm">{message.content}</p>
+                        <p className="mt-1 text-right text-xs opacity-70">
+                          {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                      {message.sender === "user" && (
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src="/placeholder.svg?height=32&width=32" />
+                          <AvatarFallback>You</AvatarFallback>
+                        </Avatar>
+                      )}
                     </div>
-                    {message.sender === "user" && (
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src="/placeholder.svg?height=32&width=32" />
-                        <AvatarFallback>You</AvatarFallback>
-                      </Avatar>
-                    )}
                   </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
             </div>
           </CardContent>
-          <CardFooter className="border-t p-3">
+          <CardFooter className="border-t p-3 sticky bottom-0 bg-background">
             <div className="flex w-full items-center gap-2">
               <Input
                 placeholder="Ask about this document..."
