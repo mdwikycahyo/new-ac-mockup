@@ -9,7 +9,7 @@ export default function EmailPage() {
     <div className="container mx-auto p-6">
       <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Email Client</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Email</h1>
           <p className="text-muted-foreground">Manage your communications and respond to messages</p>
         </div>
         <div className="flex gap-2">
@@ -29,15 +29,15 @@ export default function EmailPage() {
         <Card className="md:col-span-1">
           <CardContent className="p-4">
             <nav className="space-y-1">
-              <Button variant="ghost" className="w-full justify-start">
+              <Button variant="ghost" className="w-full justify-start bg-accent">
                 <Inbox className="mr-2 h-5 w-5" /> Inbox
                 <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">2</span>
               </Button>
               <Button variant="ghost" className="w-full justify-start">
-                <Star className="mr-2 h-5 w-5" /> Starred
+                <Send className="mr-2 h-5 w-5" /> Sent
               </Button>
               <Button variant="ghost" className="w-full justify-start">
-                <Send className="mr-2 h-5 w-5" /> Sent
+                <Star className="mr-2 h-5 w-5" /> Starred
               </Button>
               <Button variant="ghost" className="w-full justify-start">
                 <Archive className="mr-2 h-5 w-5" /> Archive

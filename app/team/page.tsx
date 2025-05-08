@@ -236,7 +236,7 @@ export default function TeamPage() {
   ]
 
   // State to track the selected team member
-  const [selectedMemberId, setSelectedMemberId] = useState(teamMembers[1].id)
+  const [selectedMemberId, setSelectedMemberId] = useState(teamMembers[0].id)
 
   // Get the selected member
   const selectedMember = teamMembers.find((member) => member.id === selectedMemberId) || teamMembers[0]

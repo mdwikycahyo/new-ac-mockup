@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ParticipantLayout } from "@/components/participant-layout"
+import { NotificationPopup } from "@/components/notification-popup"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -25,6 +26,7 @@ export default function RootLayout({
           <div className="flex min-h-screen">
             <ParticipantLayout>{children}</ParticipantLayout>
           </div>
+          <NotificationPopup />
         </ThemeProvider>
       </body>
     </html>

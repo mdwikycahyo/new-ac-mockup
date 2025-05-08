@@ -4,10 +4,11 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ArrowLeft, Reply, Forward, Trash, Archive, MoreHorizontal, Paperclip, Download, Send } from "lucide-react"
+import { ArrowLeft, Reply, Forward, Trash, Archive, MoreHorizontal, Paperclip, Download, Send, X } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { RichTextEditor } from "@/components/rich-text-editor"
+import { DocumentSelectorModal } from "@/components/document-selector-modal"
 
 // Mock email data - in a real app, this would come from an API
 const emailData = {
@@ -34,8 +35,8 @@ const emailData = {
     starred: true,
     priority: "high",
     attachments: [
-      { name: "Q1_Report_2025.pdf", size: "2.4 MB" },
-      { name: "Financial_Summary.xlsx", size: "1.1 MB" },
+      { id: 1, name: "Q1_Report_2025.pdf", size: "2.4 MB", type: "doc" },
+      { id: 2, name: "Financial_Summary.xlsx", size: "1.1 MB", type: "spreadsheet" },
     ],
   },
   "2": {
@@ -60,8 +61,16 @@ const emailData = {
     read: false,
     starred: false,
     priority: "medium",
-    attachments: [{ name: "Event_Details.pdf", size: "1.2 MB" }],
+    attachments: [{ id: 3, name: "Event_Details.pdf", size: "1.2 MB", type: "doc" }],
   },
+}
+
+interface Document {
+  id: number
+  title: string
+  type: "doc" | "spreadsheet" | "presentation" | "report"
+  lastModified: string
+  owner: string
 }
 
 export default function EmailDetailPage() {
@@ -71,12 +80,24 @@ export default function EmailDetailPage() {
 
   const [isReplying, setIsReplying] = useState(false)
   const [replyContent, setReplyContent] = useState("")
+  const [documentSelectorOpen, setDocumentSelectorOpen] = useState(false)
+  const [attachedDocuments, setAttachedDocuments] = useState<Document[]>([])
 
   const handleSendReply = () => {
     // In a real app, this would send the reply
     alert("Reply sent successfully!")
     setIsReplying(false)
     setReplyContent("")
+    setAttachedDocuments([])
+  }
+
+  const handleSelectDocument = (document: Document) => {
+    setAttachedDocuments([...attachedDocuments, document])
+    setDocumentSelectorOpen(false)
+  }
+
+  const handleRemoveAttachment = (documentId: number) => {
+    setAttachedDocuments(attachedDocuments.filter((doc) => doc.id !== documentId))
   }
 
   return (
@@ -137,8 +158,8 @@ export default function EmailDetailPage() {
             <div className="border-t p-4">
               <h3 className="mb-3 font-medium">Attachments ({email.attachments.length})</h3>
               <div className="space-y-2">
-                {email.attachments.map((attachment, index) => (
-                  <div key={index} className="flex items-center justify-between rounded-md border p-3">
+                {email.attachments.map((attachment) => (
+                  <div key={attachment.id} className="flex items-center justify-between rounded-md border p-3">
                     <div className="flex items-center gap-3">
                       <Paperclip className="h-5 w-5 text-muted-foreground" />
                       <div>
@@ -175,18 +196,51 @@ export default function EmailDetailPage() {
                 placeholder="Write your reply here..."
                 minHeight="150px"
               />
-              <div className="flex justify-end space-x-2 mt-3">
-                <Button variant="outline" onClick={() => setIsReplying(false)}>
-                  Cancel
+
+              {/* Attached documents preview */}
+              {attachedDocuments.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  <h4 className="text-sm font-medium">Attachments</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {attachedDocuments.map((doc) => (
+                      <div key={doc.id} className="flex items-center gap-2 rounded-md bg-accent p-2 text-sm">
+                        <Paperclip className="h-4 w-4" />
+                        <span>{doc.title}</span>
+                        <button
+                          className="ml-1 rounded-full hover:bg-accent-foreground/10"
+                          onClick={() => handleRemoveAttachment(doc.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-between space-x-2 mt-3">
+                <Button variant="outline" onClick={() => setDocumentSelectorOpen(true)} className="gap-2">
+                  <Paperclip className="h-4 w-4" /> Attach File
                 </Button>
-                <Button onClick={handleSendReply}>
-                  <Send className="mr-2 h-4 w-4" /> Send
-                </Button>
+                <div className="space-x-2">
+                  <Button variant="outline" onClick={() => setIsReplying(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSendReply}>
+                    <Send className="mr-2 h-4 w-4" /> Send
+                  </Button>
+                </div>
               </div>
             </div>
           )}
         </CardContent>
       </Card>
+
+      <DocumentSelectorModal
+        open={documentSelectorOpen}
+        onClose={() => setDocumentSelectorOpen(false)}
+        onSelect={handleSelectDocument}
+      />
     </div>
   )
 }
