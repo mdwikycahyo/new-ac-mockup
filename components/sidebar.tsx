@@ -35,7 +35,7 @@ const notifications = {
 const navItems = [
   {
     name: "Dashboard",
-    href: "/",
+    href: "/dashboard-new",
     icon: Home,
   },
   {
