@@ -6,10 +6,10 @@ import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ArrowLeft, Paperclip, AtSign, Send, X } from "lucide-react"
+import { ArrowLeft, Paperclip, AtSign, Send, X, Save } from "lucide-react"
 import Link from "next/link"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Badge } from "@/components/ui/badge"
 import { RichTextEditor } from "@/components/rich-text-editor"
@@ -57,6 +57,13 @@ export default function ComposeEmailPage() {
 
     // In a real app, this would send the email
     alert("Email sent successfully!")
+    // Then redirect to inbox
+    window.location.href = "/email"
+  }
+
+  const handleSaveAsDraft = () => {
+    // In a real app, this would save the email as a draft
+    alert("Email saved as draft!")
     // Then redirect to inbox
     window.location.href = "/email"
   }
@@ -128,7 +135,6 @@ export default function ComposeEmailPage() {
                             }}
                           >
                             <Avatar className="mr-2 h-6 w-6">
-                              <AvatarImage src="/placeholder.svg?height=24&width=24" />
                               <AvatarFallback>
                                 {contact.name
                                   .split(" ")
@@ -197,6 +203,9 @@ export default function ComposeEmailPage() {
             <div className="space-x-2">
               <Button variant="outline" asChild>
                 <Link href="/email">Cancel</Link>
+              </Button>
+              <Button variant="outline" onClick={handleSaveAsDraft}>
+                <Save className="mr-2 h-4 w-4" /> Save as Draft
               </Button>
               <Button onClick={handleSend}>
                 <Send className="mr-2 h-4 w-4" /> Send

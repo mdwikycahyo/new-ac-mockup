@@ -16,14 +16,14 @@ import {
   ImageIcon,
   Table,
   CheckSquare,
-  ChevronDown,
   AlignLeft,
+  AlignCenter,
+  AlignRight,
   Save,
   ArrowLeft,
   MoreHorizontal,
-  AlignCenter,
-  AlignRight,
   Link2,
+  ChevronDown,
 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
@@ -32,18 +32,29 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 export default function DocumentEditor() {
   const searchParams = useSearchParams()
   const templateId = searchParams.get("template") || "blank"
+  const documentId = searchParams.get("document")
   const [title, setTitle] = useState("")
   const [blocks, setBlocks] = useState<Block[]>([{ id: "1", type: "paragraph", content: "" }])
   const [selectedBlockId, setSelectedBlockId] = useState("1")
   const editorRef = useRef<HTMLDivElement>(null)
+
+  // Add state for active formats
   const [activeFormats, setActiveFormats] = useState<string[]>([])
 
-  // Load template content based on templateId
+  // Load template content based on templateId or documentId
   useEffect(() => {
-    const template = getTemplateContent(templateId)
-    setTitle(template.title)
-    setBlocks(template.blocks)
-  }, [templateId])
+    if (documentId) {
+      // If editing an existing document
+      const documentContent = getDocumentContent(documentId)
+      setTitle(documentContent.title)
+      setBlocks(documentContent.blocks)
+    } else {
+      // If creating from template
+      const template = getTemplateContent(templateId)
+      setTitle(template.title)
+      setBlocks(template.blocks)
+    }
+  }, [templateId, documentId])
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value)
@@ -91,18 +102,39 @@ export default function DocumentEditor() {
     setSelectedBlockId(newBlock.id)
   }
 
+  // Update the formatBlock function to track active formats
   const formatBlock = (command: string, value = "") => {
     document.execCommand(command, false, value)
 
     // Update active formats
-    if (activeFormats.includes(command)) {
-      setActiveFormats(activeFormats.filter((f) => f !== command))
+    const newFormats = [...activeFormats]
+    const commandIndex = newFormats.indexOf(command)
+
+    if (document.queryCommandState(command)) {
+      if (commandIndex === -1) newFormats.push(command)
     } else {
-      setActiveFormats([...activeFormats, command])
+      if (commandIndex !== -1) newFormats.splice(commandIndex, 1)
     }
 
+    setActiveFormats(newFormats)
+
     // Focus back on the editor
-    editorRef.current?.focus()
+    if (editorRef.current) {
+      const blockElement = editorRef.current.querySelector(`[data-block-id="${selectedBlockId}"]`)
+      if (blockElement) {
+        const selection = window.getSelection()
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0)
+          if (blockElement.contains(range.commonAncestorContainer)) {
+            // If the selection is within the block, preserve it
+            // Otherwise, focus on the block
+            blockElement.focus()
+          }
+        } else {
+          blockElement.focus()
+        }
+      }
+    }
   }
 
   return (
@@ -318,6 +350,7 @@ export default function DocumentEditor() {
               onChange={(content) => handleBlockChange(block.id, content)}
               onSelect={() => setSelectedBlockId(block.id)}
               onKeyDown={(e) => handleKeyDown(e, block.id)}
+              formatBlock={formatBlock}
             />
           ))}
         </div>
@@ -349,10 +382,11 @@ interface EditorBlockProps {
   onChange: (content: string) => void
   onSelect: () => void
   onKeyDown: (e: React.KeyboardEvent) => void
+  formatBlock: (command: string, value?: string) => void
 }
 
 // Replace the EditorBlock component with this improved version that properly maintains cursor position
-function EditorBlock({ block, isSelected, onChange, onSelect, onKeyDown }: EditorBlockProps) {
+function EditorBlock({ block, isSelected, onChange, onSelect, onKeyDown, formatBlock }: EditorBlockProps) {
   const blockRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -646,4 +680,48 @@ function getTemplateContent(templateId: string): { title: string; blocks: Block[
         blocks: [{ id: "1", type: "paragraph", content: "" }],
       }
   }
+}
+
+function getDocumentContent(documentId: string): { title: string; blocks: Block[] } {
+  // Mock document data for existing documents
+  const documentData: Record<string, { title: string; blocks: Block[] }> = {
+    "1": {
+      title: "Quarterly Report Draft",
+      blocks: [
+        { id: "1", type: "heading1", content: "Quarterly Report: Q2 2025" },
+        { id: "2", type: "heading2", content: "Executive Summary" },
+        {
+          id: "3",
+          type: "paragraph",
+          content:
+            "This report summarizes our performance in Q2 2025, highlighting key achievements, challenges, and recommendations for the upcoming quarter.",
+        },
+        { id: "4", type: "heading2", content: "Financial Performance" },
+        {
+          id: "5",
+          type: "paragraph",
+          content: "Revenue increased by 15% compared to the previous quarter, exceeding our target by 5%.",
+        },
+        { id: "6", type: "heading2", content: "Key Achievements" },
+        { id: "7", type: "bulletList", content: "Successfully launched Product X in 3 new markets" },
+        { id: "8", type: "bulletList", content: "Reduced operational costs by 8%" },
+        { id: "9", type: "bulletList", content: "Increased customer satisfaction score to 92%" },
+        { id: "10", type: "heading2", content: "Challenges" },
+        { id: "11", type: "bulletList", content: "Supply chain disruptions in Asia" },
+        { id: "12", type: "bulletList", content: "Increased competition in European markets" },
+        { id: "13", type: "heading2", content: "Recommendations" },
+        { id: "14", type: "todo", content: "Diversify supplier network" },
+        { id: "15", type: "todo", content: "Accelerate digital transformation initiatives" },
+        { id: "16", type: "todo", content: "Increase marketing budget for European region" },
+      ],
+    },
+    // Other document data...
+  }
+
+  return (
+    documentData[documentId] || {
+      title: "Untitled Document",
+      blocks: [{ id: "1", type: "paragraph", content: "" }],
+    }
+  )
 }

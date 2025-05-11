@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Search, HelpCircle, MessageSquare, FileText, ExternalLink } from "lucide-react"
+import { Search, HelpCircle, MessageSquare, FileText, ExternalLink, BookOpen } from "lucide-react"
+import Link from "next/link"
 
 export default function HelpPage() {
   return (
@@ -21,12 +22,68 @@ export default function HelpPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="faq">
+      <Tabs defaultValue="assessment">
         <TabsList className="mb-4">
+          <TabsTrigger value="assessment">Assessment Info</TabsTrigger>
           <TabsTrigger value="faq">FAQ</TabsTrigger>
           <TabsTrigger value="guides">Guides</TabsTrigger>
           <TabsTrigger value="contact">Contact Support</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="assessment" className="space-y-6">
+          <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
+            <CardHeader>
+              <CardTitle>Assessment Instructions</CardTitle>
+              <CardDescription>Important information about your workplace assessment</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-4">
+                Welcome to your workplace assessment. This simulation is designed to evaluate your skills in a typical
+                office environment. You will complete various tasks using email, documents, chat, and other workplace
+                tools.
+              </p>
+              <p className="mb-4">
+                <strong>Important:</strong> This assessment represents a single workday. All tasks should be completed
+                within the simulated timeframe.
+              </p>
+              <div className="mt-4">
+                <Button asChild>
+                  <Link href="/resources/document/1">
+                    <BookOpen className="mr-2 h-4 w-4" /> Read Full Instructions
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {assessmentDocs.map((doc) => (
+              <Card key={doc.id} className="transition-all hover:shadow-md flex flex-col h-full">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <div className="rounded-md bg-muted p-2">
+                      <doc.icon className="h-4 w-4" />
+                    </div>
+                    <CardTitle className="text-base">{doc.title}</CardTitle>
+                  </div>
+                  <CardDescription>{doc.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">{doc.category}</span>
+                    <span className="text-sm text-muted-foreground">{doc.date}</span>
+                  </div>
+                  <div className="mt-auto pt-4 flex justify-end">
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/resources/document/${doc.id}`}>Preview</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
         <TabsContent value="faq" className="space-y-6">
           <Card>
             <CardHeader>
@@ -247,5 +304,33 @@ const guideItems: GuideItem[] = [
     title: "Understanding Your Results",
     description: "A guide to interpreting your assessment results and feedback.",
     icon: HelpCircle,
+  },
+]
+
+interface Resource {
+  id: number
+  title: string
+  description: string
+  category: string
+  icon: React.ElementRef<typeof FileText>
+  date: string
+}
+
+const assessmentDocs: Resource[] = [
+  {
+    id: 1,
+    title: "Assessment Overview",
+    description: "Introduction to the workplace assessment and objectives",
+    category: "Assessment",
+    icon: BookOpen,
+    date: "Updated Apr 2025",
+  },
+  {
+    id: 6,
+    title: "Company Handbook",
+    description: "Guidelines, policies, and procedures for employees",
+    category: "HR Documents",
+    icon: FileText,
+    date: "Updated Jan 2025",
   },
 ]

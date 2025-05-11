@@ -29,7 +29,6 @@ import { Button } from "@/components/ui/button"
 const notifications = {
   "/chat": 3,
   "/email": 2,
-  "/tasks": 1,
 }
 
 const navItems = [
@@ -66,13 +65,13 @@ const navItems = [
     icon: Phone,
   },
   {
-    name: "Resources",
-    href: "/resources",
+    name: "Documents",
+    href: "/documents",
     icon: FolderOpen,
   },
   {
     name: "Project Management",
-    href: "/tasks",
+    href: "/projects",
     icon: CheckSquare,
     hasNotification: true,
   },

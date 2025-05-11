@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Plus, Star, Inbox, Send, Archive, Trash, Tag } from "lucide-react"
+import { Search, Plus, Inbox, Send, FileText } from "lucide-react"
 import Link from "next/link"
 
 export default function EmailPage() {
@@ -18,7 +18,7 @@ export default function EmailPage() {
             <Input type="search" placeholder="Search emails..." className="w-full pl-8" />
           </div>
           <Button asChild>
-            <Link href="/email/compose">
+            <Link href="/email-compose">
               <Plus className="mr-2 h-4 w-4" /> Compose
             </Link>
           </Button>
@@ -37,16 +37,8 @@ export default function EmailPage() {
                 <Send className="mr-2 h-5 w-5" /> Sent
               </Button>
               <Button variant="ghost" className="w-full justify-start">
-                <Star className="mr-2 h-5 w-5" /> Starred
-              </Button>
-              <Button variant="ghost" className="w-full justify-start">
-                <Archive className="mr-2 h-5 w-5" /> Archive
-              </Button>
-              <Button variant="ghost" className="w-full justify-start">
-                <Trash className="mr-2 h-5 w-5" /> Trash
-              </Button>
-              <Button variant="ghost" className="w-full justify-start">
-                <Tag className="mr-2 h-5 w-5" /> Labels
+                <FileText className="mr-2 h-5 w-5" /> Drafts
+                <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">3</span>
               </Button>
             </nav>
           </CardContent>

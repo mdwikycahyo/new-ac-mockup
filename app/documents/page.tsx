@@ -1,29 +1,43 @@
 "use client"
 
 import type React from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Search, Plus, File, FileText, FileSpreadsheet, FilePieChart, Clock, Star } from "lucide-react"
-import { useState } from "react"
-import { TemplateSelectionModal } from "@/components/template-selection-modal"
+import { Search, Plus, File, FileText, FileSpreadsheet, FilePieChart, Clock, FolderOpen } from "lucide-react"
+import { useState, useEffect } from "react"
+import { DocumentChatbot } from "@/components/document-chatbot"
 import Link from "next/link"
+import { TemplateSelectionModal } from "@/components/template-selection-modal"
+import { useRouter, useSearchParams } from "next/navigation"
 
-export default function DocumentsPage() {
+export default function ResourcesPage() {
   const [showTemplateModal, setShowTemplateModal] = useState(false)
+  const [activeTab, setActiveTab] = useState("documents")
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
+  // Restore active tab from URL when returning from document view
+  useEffect(() => {
+    const tab = searchParams.get("tab")
+    if (tab) {
+      setActiveTab(tab)
+    }
+  }, [searchParams])
+
+  // Add smooth transitions to tab content
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Document Editor</h1>
-          <p className="text-muted-foreground">Create and edit business documents</p>
+          <h1 className="text-3xl font-bold tracking-tight">Documents</h1>
+          <p className="text-muted-foreground">View reference documents, manage existing files, and create new document.</p>
         </div>
         <div className="flex gap-2">
           <div className="relative w-full md:w-64">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input type="search" placeholder="Search documents..." className="w-full pl-8" />
+            <Input type="search" placeholder="Search resources..." className="w-full pl-8" />
           </div>
           <Button onClick={() => setShowTemplateModal(true)}>
             <Plus className="mr-2 h-4 w-4" /> New Document
@@ -31,64 +45,39 @@ export default function DocumentsPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="recent">
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => {
+          setActiveTab(value)
+          // Update URL with new tab value without full page reload
+          router.push(`/documents?tab=${value}`, { scroll: false })
+        }}
+      >
         <TabsList className="mb-4">
-          <TabsTrigger value="recent">Recent</TabsTrigger>
-          <TabsTrigger value="shared">Shared with me</TabsTrigger>
-          <TabsTrigger value="starred">Starred</TabsTrigger>
-          <TabsTrigger value="templates">Templates</TabsTrigger>
+          <TabsTrigger value="documents">My Documents</TabsTrigger>
+          <TabsTrigger value="reference">Reference Materials</TabsTrigger>
         </TabsList>
-        <TabsContent value="recent" className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {recentDocuments.map((doc) => (
-              <DocumentCard key={doc.id} document={doc} />
-            ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="shared" className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {sharedDocuments.map((doc) => (
-              <DocumentCard key={doc.id} document={doc} />
-            ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="starred" className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {starredDocuments.map((doc) => (
-              <DocumentCard key={doc.id} document={doc} />
-            ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="templates" className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {templateDocuments.map((doc) => (
-              <DocumentCard key={doc.id} document={doc} />
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
 
-      <div className="mt-8">
-        <h2 className="mb-4 text-xl font-semibold">Document Activity</h2>
-        <Card>
-          <CardContent className="p-0">
-            <div className="divide-y">
-              {activityItems.map((item) => (
-                <div key={item.id} className="flex items-center gap-4 p-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                    <item.icon className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">{item.title}</p>
-                    <p className="text-sm text-muted-foreground">{item.description}</p>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{item.time}</p>
-                </div>
+        <div className="transition-all duration-300 ease-in-out">
+          <TabsContent value="documents" className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {recentDocuments.map((doc) => (
+                <DocumentCard key={doc.id} document={doc} activeTab={activeTab} />
               ))}
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </TabsContent>
+
+          <TabsContent value="reference" className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {referenceResources.map((resource) => (
+                <ResourceCard key={resource.id} resource={resource} activeTab={activeTab} />
+              ))}
+            </div>
+          </TabsContent>
+        </div>
+      </Tabs>
+
+      <DocumentChatbot />
       {showTemplateModal && <TemplateSelectionModal onClose={() => setShowTemplateModal(false)} />}
     </div>
   )
@@ -103,14 +92,14 @@ interface Document {
   starred?: boolean
 }
 
+// Update the document IDs to avoid conflicts
 const recentDocuments: Document[] = [
   {
-    id: 1,
+    id: 101, // Changed from 1 to 101 to avoid conflict with Assessment Overview
     title: "Quarterly Report Draft",
     type: "doc",
     lastModified: "Today, 10:30 AM",
     owner: "You",
-    starred: true,
   },
   {
     id: 2,
@@ -142,43 +131,6 @@ const recentDocuments: Document[] = [
   },
 ]
 
-const sharedDocuments: Document[] = [
-  {
-    id: 6,
-    title: "Team Objectives",
-    type: "doc",
-    lastModified: "Apr 14, 2025",
-    owner: "Project Manager",
-  },
-  {
-    id: 7,
-    title: "Sales Forecast",
-    type: "spreadsheet",
-    lastModified: "Apr 13, 2025",
-    owner: "Sales Team",
-    starred: true,
-  },
-]
-
-const starredDocuments: Document[] = [
-  {
-    id: 1,
-    title: "Quarterly Report Draft",
-    type: "doc",
-    lastModified: "Today, 10:30 AM",
-    owner: "You",
-    starred: true,
-  },
-  {
-    id: 7,
-    title: "Sales Forecast",
-    type: "spreadsheet",
-    lastModified: "Apr 13, 2025",
-    owner: "Sales Team",
-    starred: true,
-  },
-]
-
 const templateDocuments: Document[] = [
   {
     id: 8,
@@ -201,41 +153,89 @@ const templateDocuments: Document[] = [
     lastModified: "Mar 10, 2025",
     owner: "Templates",
   },
+  {
+    id: 11,
+    title: "Project Plan Template",
+    type: "doc",
+    lastModified: "Mar 5, 2025",
+    owner: "Templates",
+  },
 ]
 
-interface ActivityItem {
+interface Resource {
   id: number
   title: string
   description: string
-  time: string
-  icon: React.ElementRef<typeof File>
+  category: string
+  icon: React.ElementRef<typeof FileText>
+  date: string
 }
 
-const activityItems: ActivityItem[] = [
+const referenceResources: Resource[] = [
   {
-    id: 1,
-    title: "Quarterly Report Draft",
-    description: "You edited this document",
-    time: "10:30 AM",
+    id: 6,
+    title: "Company Handbook",
+    description: "Guidelines, policies, and procedures for employees",
+    category: "HR Documents",
     icon: FileText,
+    date: "Updated Jan 2025",
   },
   {
-    id: 2,
-    title: "Project Timeline",
-    description: "You created this spreadsheet",
-    time: "Yesterday",
-    icon: FileSpreadsheet,
+    id: 11,
+    title: "Project Plan Template",
+    description: "Standard template for creating project plans",
+    category: "Project Management",
+    icon: FileText,
+    date: "Updated Mar 2025",
   },
   {
-    id: 3,
-    title: "Marketing Presentation",
-    description: "Marketing Team shared this with you",
-    time: "Apr 12",
-    icon: FilePieChart,
+    id: 7,
+    title: "Brand Guidelines",
+    description: "Official brand colors, logos, and usage rules",
+    category: "Marketing",
+    icon: FileText,
+    date: "Updated Feb 2025",
+  },
+  {
+    id: 102, // Changed from 8 to 102 to avoid conflict with Project Proposal Template
+    title: "Research Database",
+    description: "Access to industry research and reports",
+    category: "Research",
+    icon: FolderOpen,
+    date: "Updated Weekly",
   },
 ]
 
-function DocumentCard({ document }: { document: Document }) {
+function ResourceCard({ resource, activeTab }: { resource: Resource; activeTab: string }) {
+  const ResourceIcon = resource.icon
+
+  return (
+    <Card className="transition-all hover:shadow-md flex flex-col h-full">
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <div className="rounded-md bg-muted p-2">
+            <ResourceIcon className="h-4 w-4" />
+          </div>
+          <CardTitle className="text-base">{resource.title}</CardTitle>
+        </div>
+        <CardDescription>{resource.description}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex-1 flex flex-col">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">{resource.category}</span>
+          <span className="text-sm text-muted-foreground">{resource.date}</span>
+        </div>
+        <div className="mt-auto pt-4 flex justify-end">
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/documents/document/${resource.id}?tab=${activeTab}`}>Preview</Link>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function DocumentCard({ document, activeTab }: { document: Document; activeTab: string }) {
   const iconMap = {
     doc: FileText,
     spreadsheet: FileSpreadsheet,
@@ -246,7 +246,7 @@ function DocumentCard({ document }: { document: Document }) {
   const DocIcon = iconMap[document.type]
 
   return (
-    <Card className="transition-all hover:shadow-md">
+    <Card className="transition-all hover:shadow-md h-full flex flex-col">
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
         <div className="flex items-center space-x-2">
           <div className="rounded-md bg-muted p-2">
@@ -254,9 +254,8 @@ function DocumentCard({ document }: { document: Document }) {
           </div>
           <CardTitle className="text-base">{document.title}</CardTitle>
         </div>
-        {document.starred && <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />}
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 flex flex-col">
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center">
             <Clock className="mr-1 h-3 w-3" />
@@ -264,19 +263,15 @@ function DocumentCard({ document }: { document: Document }) {
           </div>
           <span>{document.owner}</span>
         </div>
-        <div className="mt-4 flex justify-end space-x-2">
+        <div className="mt-auto pt-4 flex justify-end space-x-2">
           <Button variant="outline" size="sm" asChild>
-            <Link href={`/documents/view/${document.id}`}>View</Link>
+            <Link href={`/documents/document/${document.id}?tab=${activeTab}`}>View</Link>
           </Button>
           <Button size="sm" asChild>
-            <Link href={`/documents/editor?document=${document.id}`}>Edit</Link>
+            <Link href={`/documents/editor?document=${document.id}&tab=${activeTab}`}>Edit</Link>
           </Button>
         </div>
       </CardContent>
     </Card>
   )
-}
-
-interface TemplateSelectionModalProps {
-  onClose: () => void
 }

@@ -2,11 +2,10 @@
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Edit, Printer, Share, Star } from "lucide-react"
+import { ArrowLeft, Edit } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 // Mock document data - in a real app, this would come from an API
 const documentData = {
@@ -142,6 +141,183 @@ const documentData = {
       </ul>
     `,
   },
+  "3": {
+    id: 3,
+    title: "Marketing Presentation",
+    type: "presentation",
+    lastModified: "Apr 12, 2025",
+    owner: "Marketing Team",
+    content: `
+      <h1 class="text-2xl font-bold mb-4">Marketing Strategy Presentation</h1>
+      
+      <h2 class="text-xl font-bold mt-6 mb-2">Q2 Marketing Campaign</h2>
+      <p>Our Q2 marketing campaign will focus on expanding our market reach and increasing brand awareness through targeted digital marketing initiatives.</p>
+      
+      <h2 class="text-xl font-bold mt-6 mb-2">Target Audience</h2>
+      <ul class="list-disc pl-6 mb-4">
+        <li>Small to medium-sized businesses</li>
+        <li>Tech-savvy professionals aged 25-45</li>
+        <li>Decision-makers in the finance and healthcare sectors</li>
+      </ul>
+      
+      <h2 class="text-xl font-bold mt-6 mb-2">Campaign Channels</h2>
+      <ul class="list-disc pl-6 mb-4">
+        <li>Social media (LinkedIn, Twitter, Instagram)</li>
+        <li>Email marketing campaigns</li>
+        <li>Industry webinars and virtual events</li>
+        <li>Content marketing (blog posts, whitepapers)</li>
+      </ul>
+      
+      <h2 class="text-xl font-bold mt-6 mb-2">Budget Allocation</h2>
+      <ul class="list-disc pl-6 mb-4">
+        <li>Digital advertising: 40%</li>
+        <li>Content creation: 30%</li>
+        <li>Events and webinars: 20%</li>
+        <li>Analytics and tools: 10%</li>
+      </ul>
+      
+      <h2 class="text-xl font-bold mt-6 mb-2">Expected Outcomes</h2>
+      <ul class="list-disc pl-6 mb-4">
+        <li>15% increase in website traffic</li>
+        <li>20% growth in qualified leads</li>
+        <li>10% improvement in conversion rates</li>
+        <li>25% increase in social media engagement</li>
+      </ul>
+    `,
+  },
+  "4": {
+    id: 4,
+    title: "Budget Analysis",
+    type: "spreadsheet",
+    lastModified: "Apr 10, 2025",
+    owner: "Finance Department",
+    content: `
+      <h1 class="text-2xl font-bold mb-4">Q1 2025 Budget Analysis</h1>
+      
+      <h2 class="text-xl font-bold mt-6 mb-2">Budget Overview</h2>
+      <table class="min-w-full border-collapse border border-gray-300 mb-6">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="border border-gray-300 p-2">Department</th>
+            <th class="border border-gray-300 p-2">Allocated Budget</th>
+            <th class="border border-gray-300 p-2">Actual Spend</th>
+            <th class="border border-gray-300 p-2">Variance</th>
+            <th class="border border-gray-300 p-2">Variance %</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="border border-gray-300 p-2">Marketing</td>
+            <td class="border border-gray-300 p-2">$250,000</td>
+            <td class="border border-gray-300 p-2">$235,000</td>
+            <td class="border border-gray-300 p-2">$15,000</td>
+            <td class="border border-gray-300 p-2">6%</td>
+          </tr>
+          <tr>
+            <td class="border border-gray-300 p-2">Sales</td>
+            <td class="border border-gray-300 p-2">$350,000</td>
+            <td class="border border-gray-300 p-2">$365,000</td>
+            <td class="border border-gray-300 p-2">-$15,000</td>
+            <td class="border border-gray-300 p-2">-4.3%</td>
+          </tr>
+          <tr>
+            <td class="border border-gray-300 p-2">R&D</td>
+            <td class="border border-gray-300 p-2">$500,000</td>
+            <td class="border border-gray-300 p-2">$475,000</td>
+            <td class="border border-gray-300 p-2">$25,000</td>
+            <td class="border border-gray-300 p-2">5%</td>
+          </tr>
+          <tr>
+            <td class="border border-gray-300 p-2">Operations</td>
+            <td class="border border-gray-300 p-2">$200,000</td>
+            <td class="border border-gray-300 p-2">$210,000</td>
+            <td class="border border-gray-300 p-2">-$10,000</td>
+            <td class="border border-gray-300 p-2">-5%</td>
+          </tr>
+          <tr>
+            <td class="border border-gray-300 p-2">HR</td>
+            <td class="border border-gray-300 p-2">$150,000</td>
+            <td class="border border-gray-300 p-2">$145,000</td>
+            <td class="border border-gray-300 p-2">$5,000</td>
+            <td class="border border-gray-300 p-2">3.3%</td>
+          </tr>
+          <tr>
+            <td class="border border-gray-300 p-2 font-bold">Total</td>
+            <td class="border border-gray-300 p-2 font-bold">$1,450,000</td>
+            <td class="border border-gray-300 p-2 font-bold">$1,430,000</td>
+            <td class="border border-gray-300 p-2 font-bold">$20,000</td>
+            <td class="border border-gray-300 p-2 font-bold">1.4%</td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <h2 class="text-xl font-bold mt-6 mb-2">Key Observations</h2>
+      <ul class="list-disc pl-6 mb-4">
+        <li>Overall, we are under budget by 1.4% ($20,000)</li>
+        <li>Sales and Operations departments exceeded their allocated budgets</li>
+        <li>Marketing, R&D, and HR departments were under budget</li>
+        <li>R&D had the largest absolute savings at $25,000</li>
+      </ul>
+      
+      <h2 class="text-xl font-bold mt-6 mb-2">Recommendations</h2>
+      <ul class="list-disc pl-6 mb-4">
+        <li>Review Sales department spending to identify areas for optimization</li>
+        <li>Analyze Operations budget allocation for Q2</li>
+        <li>Consider reallocating some of the surplus from R&D to support Sales initiatives</li>
+        <li>Maintain current budget controls for Marketing and HR</li>
+      </ul>
+    `,
+  },
+  "5": {
+    id: 5,
+    title: "Meeting Notes",
+    type: "doc",
+    lastModified: "Apr 8, 2025",
+    owner: "You",
+    content: `
+      <h1 class="text-2xl font-bold mb-4">Team Meeting Notes</h1>
+      <p class="text-muted-foreground">Date: April 8, 2025</p>
+      
+      <h2 class="text-xl font-bold mt-6 mb-2">Attendees</h2>
+      <ul class="list-disc pl-6 mb-4">
+        <li>Project Manager (Chair)</li>
+        <li>Development Team Lead</li>
+        <li>UX Designer</li>
+        <li>QA Lead</li>
+        <li>Marketing Representative</li>
+        <li>You (Note-taker)</li>
+      </ul>
+      
+      <h2 class="text-xl font-bold mt-6 mb-2">Agenda Items</h2>
+      
+      <h3 class="text-lg font-bold mt-4 mb-2">1. Project Status Update</h3>
+      <ul class="list-disc pl-6 mb-4">
+        <li>Development is currently on track for the Q2 release</li>
+        <li>All critical path items are progressing as scheduled</li>
+        <li>Backend integration is 85% complete</li>
+        <li>Frontend implementation is 70% complete</li>
+      </ul>
+      
+      <h3 class="text-lg font-bold mt-4 mb-2">2. Issues and Blockers</h3>
+      <ul class="list-disc pl-6 mb-4">
+        <li>Third-party API integration delayed due to vendor response time</li>
+        <li>Resource constraint in the QA team may impact testing timeline</li>
+        <li>Design changes requested by the client need to be evaluated for scope impact</li>
+      </ul>
+      
+      <h3 class="text-lg font-bold mt-4 mb-2">3. Action Items</h3>
+      <ul class="list-disc pl-6 mb-4">
+        <li>Project Manager to follow up with the vendor regarding API integration</li>
+        <li>Development Lead to assess impact of design changes by April 10</li>
+        <li>QA Lead to propose resource allocation plan by April 12</li>
+        <li>Marketing to prepare communication plan for the release by April 15</li>
+        <li>All team members to update task status in the project management tool by EOD</li>
+      </ul>
+      
+      <h3 class="text-lg font-bold mt-4 mb-2">4. Next Meeting</h3>
+      <p>April 15, 2025 at 10:00 AM</p>
+    `,
+  },
 }
 
 export default function DocumentViewPage() {
@@ -168,29 +344,12 @@ export default function DocumentViewPage() {
       </div>
 
       <div className="mb-4 flex items-center justify-between">
-        <Tabs defaultValue="document">
-          <TabsList>
-            <TabsTrigger value="document">Document</TabsTrigger>
-            <TabsTrigger value="comments">Comments</TabsTrigger>
-            <TabsTrigger value="history">Version History</TabsTrigger>
-          </TabsList>
-        </Tabs>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <Printer className="mr-2 h-4 w-4" /> Print
-          </Button>
-          <Button variant="outline" size="sm">
-            <Share className="mr-2 h-4 w-4" /> Share
-          </Button>
-          <Button variant="outline" size="sm">
-            <Star className="mr-2 h-4 w-4" /> Favorite
-          </Button>
-          <Button size="sm" asChild>
-            <Link href={`/documents/editor?document=${document.id}`}>
-              <Edit className="mr-2 h-4 w-4" /> Edit
-            </Link>
-          </Button>
-        </div>
+        <h2 className="text-xl font-medium">Document Preview</h2>
+        <Button size="sm" asChild>
+          <Link href={`/documents/editor?document=${document.id}`}>
+            <Edit className="mr-2 h-4 w-4" /> Edit
+          </Link>
+        </Button>
       </div>
 
       <Card>

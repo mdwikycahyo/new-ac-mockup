@@ -3,8 +3,8 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ArrowLeft, Reply, Forward, Trash, Archive, MoreHorizontal, Paperclip, Download, Send, X } from "lucide-react"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { ArrowLeft, Reply, Forward, Paperclip, Download, Send, X, Save } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { RichTextEditor } from "@/components/rich-text-editor"
@@ -91,6 +91,14 @@ export default function EmailDetailPage() {
     setAttachedDocuments([])
   }
 
+  const handleSaveAsDraft = () => {
+    // In a real app, this would save the reply as a draft
+    alert("Reply saved as draft!")
+    setIsReplying(false)
+    setReplyContent("")
+    setAttachedDocuments([])
+  }
+
   const handleSelectDocument = (document: Document) => {
     setAttachedDocuments([...attachedDocuments, document])
     setDocumentSelectorOpen(false)
@@ -118,7 +126,6 @@ export default function EmailDetailPage() {
         <CardHeader className="flex flex-row items-start justify-between border-b p-4">
           <div className="flex items-center gap-4">
             <Avatar className="h-10 w-10">
-              <AvatarImage src="/placeholder.svg?height=40&width=40" />
               <AvatarFallback>
                 {email.sender
                   .split(" ")
@@ -136,17 +143,6 @@ export default function EmailDetailPage() {
               </div>
               <div className="text-sm text-muted-foreground">To: {email.recipients.join(", ")}</div>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon">
-              <Archive className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <Trash className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <MoreHorizontal className="h-5 w-5" />
-            </Button>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -225,6 +221,9 @@ export default function EmailDetailPage() {
                 <div className="space-x-2">
                   <Button variant="outline" onClick={() => setIsReplying(false)}>
                     Cancel
+                  </Button>
+                  <Button variant="outline" onClick={handleSaveAsDraft}>
+                    <Save className="mr-2 h-4 w-4" /> Save as Draft
                   </Button>
                   <Button onClick={handleSendReply}>
                     <Send className="mr-2 h-4 w-4" /> Send
