@@ -32,7 +32,11 @@ export default function SelectContactsPage() {
   }
 
   const handleStartCall = () => {
-    // In a real app, this would start the call with selected contacts
+    // Store selected contacts in sessionStorage
+    sessionStorage.setItem("selectedContacts", JSON.stringify(selectedContacts))
+    sessionStorage.setItem("meetingTitle", meetingTitle)
+
+    // Navigate to the conference page
     router.push("/conference")
   }
 

@@ -319,9 +319,7 @@ export default function ConferencePage() {
                 </Popover>
 
                 <Button variant="destructive" size="icon">
-                  <Link href="/conference/select">
-                    <Phone className="h-4 w-4" />
-                  </Link>
+                  <Phone className="h-4 w-4" />
                 </Button>
               </div>
             </CardContent>

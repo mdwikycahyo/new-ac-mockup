@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Search, Plus, File, FileText, FileSpreadsheet, FilePieChart, Clock, FolderOpen, BookOpen } from "lucide-react"
+import { Search, Plus, File, FileText, FileSpreadsheet, FilePieChart, Clock, FolderOpen } from "lucide-react"
 import { useState, useEffect } from "react"
 import { DocumentChatbot } from "@/components/document-chatbot"
 import Link from "next/link"
@@ -14,7 +14,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 
 export default function ResourcesPage() {
   const [showTemplateModal, setShowTemplateModal] = useState(false)
-  const [activeTab, setActiveTab] = useState("assessment")
+  const [activeTab, setActiveTab] = useState("documents")
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -54,46 +54,11 @@ export default function ResourcesPage() {
         }}
       >
         <TabsList className="mb-4">
-          <TabsTrigger value="assessment">Assessment Info</TabsTrigger>
           <TabsTrigger value="documents">My Documents</TabsTrigger>
           <TabsTrigger value="reference">Reference Materials</TabsTrigger>
-          <TabsTrigger value="templates">Templates</TabsTrigger>
         </TabsList>
 
         <div className="transition-all duration-300 ease-in-out">
-          <TabsContent value="assessment" className="space-y-4">
-            <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
-              <CardHeader>
-                <CardTitle>Assessment Instructions</CardTitle>
-                <CardDescription>Important information about your workplace assessment</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4">
-                  Welcome to your workplace assessment. This simulation is designed to evaluate your skills in a typical
-                  office environment. You will complete various tasks using email, documents, chat, and other workplace
-                  tools.
-                </p>
-                <p className="mb-4">
-                  <strong>Important:</strong> This assessment represents a single workday. All tasks should be completed
-                  within the simulated timeframe.
-                </p>
-                <div className="mt-4">
-                  <Button asChild>
-                    <Link href={`/resources/document/1?tab=${activeTab}`}>
-                      <BookOpen className="mr-2 h-4 w-4" /> Read Full Instructions
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {assessmentDocs.map((doc) => (
-                <ResourceCard key={doc.id} resource={doc} activeTab={activeTab} />
-              ))}
-            </div>
-          </TabsContent>
-
           <TabsContent value="documents" className="space-y-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {recentDocuments.map((doc) => (
@@ -106,14 +71,6 @@ export default function ResourcesPage() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {referenceResources.map((resource) => (
                 <ResourceCard key={resource.id} resource={resource} activeTab={activeTab} />
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="templates" className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {templateDocuments.map((doc) => (
-                <DocumentCard key={doc.id} document={doc} activeTab={activeTab} />
               ))}
             </div>
           </TabsContent>
@@ -214,25 +171,6 @@ interface Resource {
   date: string
 }
 
-const assessmentDocs: Resource[] = [
-  {
-    id: 1,
-    title: "Assessment Overview",
-    description: "Introduction to the workplace assessment and objectives",
-    category: "Assessment",
-    icon: BookOpen,
-    date: "Updated Apr 2025",
-  },
-  {
-    id: 6,
-    title: "Company Handbook",
-    description: "Guidelines, policies, and procedures for employees",
-    category: "HR Documents",
-    icon: FileText,
-    date: "Updated Jan 2025",
-  },
-]
-
 const referenceResources: Resource[] = [
   {
     id: 6,
@@ -272,7 +210,7 @@ function ResourceCard({ resource, activeTab }: { resource: Resource; activeTab: 
   const ResourceIcon = resource.icon
 
   return (
-    <Card className="transition-all hover:shadow-md flex flex-col">
+    <Card className="transition-all hover:shadow-md flex flex-col h-full">
       <CardHeader>
         <div className="flex items-center gap-2">
           <div className="rounded-md bg-muted p-2">
@@ -308,7 +246,7 @@ function DocumentCard({ document, activeTab }: { document: Document; activeTab: 
   const DocIcon = iconMap[document.type]
 
   return (
-    <Card className="transition-all hover:shadow-md">
+    <Card className="transition-all hover:shadow-md h-full flex flex-col">
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
         <div className="flex items-center space-x-2">
           <div className="rounded-md bg-muted p-2">
@@ -317,7 +255,7 @@ function DocumentCard({ document, activeTab }: { document: Document; activeTab: 
           <CardTitle className="text-base">{document.title}</CardTitle>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 flex flex-col">
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center">
             <Clock className="mr-1 h-3 w-3" />
@@ -325,7 +263,7 @@ function DocumentCard({ document, activeTab }: { document: Document; activeTab: 
           </div>
           <span>{document.owner}</span>
         </div>
-        <div className="mt-4 flex justify-end space-x-2">
+        <div className="mt-auto pt-4 flex justify-end space-x-2">
           <Button variant="outline" size="sm" asChild>
             <Link href={`/resources/document/${document.id}?tab=${activeTab}`}>View</Link>
           </Button>
