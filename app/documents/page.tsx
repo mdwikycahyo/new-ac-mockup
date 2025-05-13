@@ -6,17 +6,85 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Search, Plus, File, FileText, FileSpreadsheet, FilePieChart, Clock, FolderOpen } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { DocumentChatbot } from "@/components/document-chatbot"
 import Link from "next/link"
 import { TemplateSelectionModal } from "@/components/template-selection-modal"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useDemoMode } from "@/components/context/demo-mode-context"
 
 export default function ResourcesPage() {
   const [showTemplateModal, setShowTemplateModal] = useState(false)
   const [activeTab, setActiveTab] = useState("documents")
+  const [highlightNewButton, setHighlightNewButton] = useState(false)
+  const [savedDocuments, setSavedDocuments] = useState<any[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
   const router = useRouter()
   const searchParams = useSearchParams()
+  const newButtonRef = useRef<HTMLButtonElement>(null)
+  const { demoMode } = useDemoMode()
+
+  // Load saved documents from localStorage
+  useEffect(() => {
+    const loadDocuments = () => {
+      if (typeof window !== "undefined") {
+        try {
+          const docs = JSON.parse(localStorage.getItem("documents") || "[]")
+          setSavedDocuments(docs)
+        } catch (error) {
+          console.error("Error loading documents:", error)
+          setSavedDocuments([])
+        }
+      }
+    }
+
+    // Load documents on mount
+    loadDocuments()
+
+    // Set up storage event listener to reload documents when localStorage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "documents") {
+        loadDocuments()
+      }
+    }
+
+    window.addEventListener("storage", handleStorageChange)
+
+    // Poll for changes every second (as a fallback)
+    const interval = setInterval(loadDocuments, 1000)
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange)
+      clearInterval(interval)
+    }
+  }, [])
+
+  // Check if we're coming from the conference call
+  useEffect(() => {
+    const referrer = document.referrer
+    if (referrer.includes("/conference")) {
+      setHighlightNewButton(true)
+
+      // Scroll to the button and highlight it
+      if (newButtonRef.current) {
+        newButtonRef.current.scrollIntoView({ behavior: "smooth", block: "center" })
+
+        // Add a small delay before starting the animation
+        setTimeout(() => {
+          if (newButtonRef.current) {
+            newButtonRef.current.classList.add("animate-bounce")
+
+            // Stop the animation after 5 seconds
+            setTimeout(() => {
+              if (newButtonRef.current) {
+                newButtonRef.current.classList.remove("animate-bounce")
+              }
+            }, 5000)
+          }
+        }, 500)
+      }
+    }
+  }, [])
 
   // Restore active tab from URL when returning from document view
   useEffect(() => {
@@ -26,20 +94,40 @@ export default function ResourcesPage() {
     }
   }, [searchParams])
 
+  // Filter documents based on search query
+  const filteredUserDocuments = demoMode
+    ? savedDocuments.filter((doc) => doc.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    : [
+        ...recentDocuments,
+        ...savedDocuments.filter((doc) => doc.title.toLowerCase().includes(searchQuery.toLowerCase())),
+      ]
+
   // Add smooth transitions to tab content
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Documents</h1>
-          <p className="text-muted-foreground">View reference documents, manage existing files, and create new document.</p>
+          <p className="text-muted-foreground">
+            View reference documents, manage existing files, and create new document.
+          </p>
         </div>
         <div className="flex gap-2">
           <div className="relative w-full md:w-64">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input type="search" placeholder="Search resources..." className="w-full pl-8" />
+            <Input
+              type="search"
+              placeholder="Search documents..."
+              className="w-full pl-8"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
-          <Button onClick={() => setShowTemplateModal(true)}>
+          <Button
+            onClick={() => setShowTemplateModal(true)}
+            ref={newButtonRef}
+            className={`${highlightNewButton ? "ring-2 ring-blue-500 shadow-lg" : ""} transition-all`}
+          >
             <Plus className="mr-2 h-4 w-4" /> New Document
           </Button>
         </div>
@@ -61,9 +149,11 @@ export default function ResourcesPage() {
         <div className="transition-all duration-300 ease-in-out">
           <TabsContent value="documents" className="space-y-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {recentDocuments.map((doc) => (
-                <DocumentCard key={doc.id} document={doc} activeTab={activeTab} />
-              ))}
+              {filteredUserDocuments.length > 0 ? (
+                filteredUserDocuments.map((doc) => <DocumentCard key={doc.id} document={doc} activeTab={activeTab} />)
+              ) : (
+                <div className="col-span-full text-center py-12 text-muted-foreground">No documents found</div>
+              )}
             </div>
           </TabsContent>
 
@@ -84,12 +174,13 @@ export default function ResourcesPage() {
 }
 
 interface Document {
-  id: number
+  id: number | string
   title: string
   type: "doc" | "spreadsheet" | "presentation" | "report"
   lastModified: string
   owner: string
   starred?: boolean
+  content?: any[]
 }
 
 // Update the document IDs to avoid conflicts
@@ -131,37 +222,6 @@ const recentDocuments: Document[] = [
   },
 ]
 
-const templateDocuments: Document[] = [
-  {
-    id: 8,
-    title: "Project Proposal Template",
-    type: "doc",
-    lastModified: "Mar 20, 2025",
-    owner: "Templates",
-  },
-  {
-    id: 9,
-    title: "Invoice Template",
-    type: "spreadsheet",
-    lastModified: "Mar 15, 2025",
-    owner: "Templates",
-  },
-  {
-    id: 10,
-    title: "Monthly Report Template",
-    type: "report",
-    lastModified: "Mar 10, 2025",
-    owner: "Templates",
-  },
-  {
-    id: 11,
-    title: "Project Plan Template",
-    type: "doc",
-    lastModified: "Mar 5, 2025",
-    owner: "Templates",
-  },
-]
-
 interface Resource {
   id: number
   title: string
@@ -172,6 +232,14 @@ interface Resource {
 }
 
 const referenceResources: Resource[] = [
+  {
+    id: 201,
+    title: "Dokumen Referensi Kegiatan Engagement",
+    description: "Panduan dan referensi untuk aktivitas team building dan engagement",
+    category: "HR Documents",
+    icon: FileText,
+    date: "Updated Apr 2025",
+  },
   {
     id: 6,
     title: "Company Handbook",

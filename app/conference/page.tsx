@@ -1,521 +1,512 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Input } from "@/components/ui/input"
-import {
-  Mic,
-  MicOff,
-  Video,
-  VideoOff,
-  Share,
-  MessageSquare,
-  MoreVertical,
-  Phone,
-  Plus,
-  Settings,
-  Users,
-  Layout,
-  Hand,
-  PanelRight,
-  PanelLeft,
-  Maximize,
-  Minimize,
-} from "lucide-react"
-import Link from "next/link"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Slider } from "@/components/ui/slider"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Mic, MicOff, Video, VideoOff, Phone, Users, FileText, FolderOpen } from "lucide-react"
+import { useRouter } from "next/navigation"
+
+// Define the conversation script
+const conversationScript = [
+  {
+    speaker: "You (AVP of Earth Operation)",
+    speakerId: 1,
+    content:
+      "Terima kasih semuanya sudah meluangkan waktu. Saya ingin membahas rencana Fun Games Interaktif sebagai bagian dari inisiatif engagement kita tahun ini. Saya tahu masing-masing dari kita punya tantangan dan prioritas berbeda, jadi saya sangat terbuka mendengar pandangan rekan-rekan semua.",
+  },
+  {
+    speaker: "GM of Earth Agriculture",
+    speakerId: 2,
+    content:
+      "Saya setuju banget. Anak-anak saya akhir-akhir ini kelihatan jenuh. Aktivitas seperti ini bisa bantu menghidupkan semangat tim lagi.",
+  },
+  {
+    speaker: "You (AVP of Earth Operation)",
+    speakerId: 1,
+    content:
+      "Terima kasih atas dukungannya, itu jadi masukan positif. Aktivitas ini memang kami harap bisa jadi ruang pemulihan energi tim lintas unit.",
+  },
+  {
+    speaker: "GM of Earth Waste Management",
+    speakerId: 4,
+    content: "Saya agak skeptis. Target bulanan kami padat, dan kegiatan semacam ini bisa jadi distraksi.",
+  },
+  {
+    speaker: "You (AVP of Earth Operation)",
+    speakerId: 1,
+    content:
+      "Terima kasih sudah menyampaikan kekhawatiran itu. Saya sepenuhnya paham. Salah satu opsi yang sedang kami pertimbangkan adalah games interaktif yang bisa dibagi dalam sesi pendek dan tidak harus dilakukan dalam satu waktu. Dengan begitu, masing-masing tim bisa ikut tanpa mengganggu target kerja. Apakah pendekatan seperti ini memungkinkan untuk unit Anda?",
+  },
+  {
+    speaker: "Head of Finance & Accounting",
+    speakerId: 5,
+    content: "Saya khawatir soal anggaran dan beban kerja yang sedang tinggi.",
+  },
+  {
+    speaker: "You (AVP of Earth Operation)",
+    speakerId: 1,
+    content:
+      "Poin yang sangat penting. Saya akan coba ajukan alternatif yang minim biaya, misalnya memakai aset internal dan fasilitator dari tim kita sendiri. Saya juga akan menyusun jadwal yang menghindari jam-jam sibuk, jadi tidak menambah tekanan kerja.",
+  },
+  {
+    speaker: "Head of Procurement & IT",
+    speakerId: 7,
+    content: "Saya oke saja, selama koordinasinya jelas.",
+  },
+  {
+    speaker: "You (AVP of Earth Operation)",
+    speakerId: 1,
+    content: "Noted, terima kasih. Saya akan pastikan alur koordinasi terstruktur supaya semua pihak merasa nyaman.",
+  },
+  {
+    speaker: "Head of General Affairs",
+    speakerId: 6,
+    content:
+      "Wah, idenya seru nih! Biar semuanya semakin jelas, mungkin kamu bisa bantu buatkan draft activity dan timeline singkat? Nanti kita bisa review bareng-bareng.",
+  },
+  {
+    speaker: "You (AVP of Earth Operation)",
+    speakerId: 1,
+    content:
+      "Siap, itu ide bagus! Saya akan buatkan draft activity dan timeline-nya, lalu kirim ke teman-teman agar semua bisa kasih masukan dan kita bisa finalize sama-sama. Terima kasih banyak atas masukannya!",
+  },
+]
 
 export default function ConferencePage() {
-  const [isFullScreen, setIsFullScreen] = useState(false)
-  const [showChat, setShowChat] = useState(false)
-  const [showParticipants, setShowParticipants] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [isVideoOff, setIsVideoOff] = useState(false)
-  const [isSharing, setIsSharing] = useState(false)
-  const [isRaising, setIsRaising] = useState(false)
-  const [layout, setLayout] = useState<"grid" | "speaker">("grid")
-  const [message, setMessage] = useState("")
+  const [callDuration, setCallDuration] = useState(0)
+  const [currentSpeakerIndex, setCurrentSpeakerIndex] = useState(0)
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0)
+  const [typedText, setTypedText] = useState("")
+  const [isTyping, setIsTyping] = useState(false)
+  const [transcriptMessages, setTranscriptMessages] = useState<Array<{ id: number; speaker: string; content: string }>>(
+    [],
+  )
+  const [conversationEnded, setConversationEnded] = useState(false)
 
-  const toggleFullScreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((e) => {
-        console.error(`Error attempting to enable full-screen mode: ${e.message}`)
-      })
-      setIsFullScreen(true)
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen()
-        setIsFullScreen(false)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const typingTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const messageTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  const router = useRouter()
+  const videoContainerRef = useRef<HTMLDivElement>(null)
+  const mainContainerRef = useRef<HTMLDivElement>(null)
+
+  // Start timer when component mounts
+  useEffect(() => {
+    timerRef.current = setInterval(() => {
+      setCallDuration((prev) => prev + 1)
+    }, 1000)
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+      if (typingTimerRef.current) clearInterval(typingTimerRef.current)
+      if (messageTimerRef.current) clearTimeout(messageTimerRef.current)
+    }
+  }, [])
+
+  // Format time as HH:MM:SS
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const secs = seconds % 60
+
+    return [
+      hours.toString().padStart(2, "0"),
+      minutes.toString().padStart(2, "0"),
+      secs.toString().padStart(2, "0"),
+    ].join(":")
+  }
+
+  // Earth Operation meeting participants
+  const participants = [
+    {
+      id: 1,
+      name: "AVP of Earth Operation",
+      role: "You (Meeting Host)",
+      avatar: "/businessman-glasses.png",
+      isYou: true,
+      muted: isMuted,
+      videoOff: isVideoOff,
+      speaking: currentSpeakerIndex === 0,
+    },
+    {
+      id: 2,
+      name: "GM of Earth Agriculture",
+      role: "General Manager",
+      avatar: "/confident-businessman.png",
+      isYou: false,
+      muted: false,
+      videoOff: false,
+      speaking: currentSpeakerIndex === 1,
+    },
+    {
+      id: 3,
+      name: "GM of Earth Food Processing",
+      role: "General Manager",
+      avatar: "/confident-business-woman.png",
+      isYou: false,
+      muted: false,
+      videoOff: false,
+      speaking: currentSpeakerIndex === 2,
+    },
+    {
+      id: 4,
+      name: "GM of Earth Waste Management",
+      role: "General Manager",
+      avatar: "/confident-businessman.png",
+      isYou: false,
+      muted: false,
+      videoOff: false,
+      speaking: currentSpeakerIndex === 3,
+    },
+    {
+      id: 5,
+      name: "Head of Finance & Accounting",
+      role: "Department Head",
+      avatar: "/confident-business-woman.png",
+      isYou: false,
+      muted: false,
+      videoOff: false,
+      speaking: currentSpeakerIndex === 4,
+    },
+    {
+      id: 6,
+      name: "Head of General Affairs",
+      role: "Department Head",
+      avatar: "/confident-businessman.png",
+      isYou: false,
+      muted: false,
+      videoOff: false,
+      speaking: currentSpeakerIndex === 5,
+    },
+    {
+      id: 7,
+      name: "Head of Procurement & IT",
+      role: "Department Head",
+      avatar: "/business-woman-glasses.png",
+      isYou: false,
+      muted: false,
+      videoOff: false,
+      speaking: currentSpeakerIndex === 6,
+    },
+  ]
+
+  // Start conversation immediately
+  useEffect(() => {
+    // Start the first message immediately
+    startTypingMessage(0)
+  }, [])
+
+  // Handle typing effect
+  useEffect(() => {
+    if (isTyping && currentMessageIndex < conversationScript.length) {
+      const currentMessage = conversationScript[currentMessageIndex]
+      const fullText = currentMessage.content
+
+      if (typedText.length < fullText.length) {
+        // Type the next character - faster typing speed (15ms)
+        typingTimerRef.current = setTimeout(() => {
+          setTypedText(fullText.substring(0, typedText.length + 1))
+        }, 15) // Faster typing speed
+      } else {
+        // Finished typing this message
+        setIsTyping(false)
+
+        // Add the complete message to transcript
+        setTranscriptMessages((prev) => [
+          ...prev,
+          {
+            id: currentMessageIndex + 1,
+            speaker: currentMessage.speaker,
+            content: currentMessage.content,
+          },
+        ])
+
+        // Wait before starting the next message
+        messageTimerRef.current = setTimeout(() => {
+          if (currentMessageIndex < conversationScript.length - 1) {
+            startTypingMessage(currentMessageIndex + 1)
+          } else {
+            // Conversation has ended
+            setConversationEnded(true)
+          }
+        }, 1000) // Pause between messages
       }
     }
-  }
+  }, [typedText, isTyping, currentMessageIndex])
 
-  const handleSendMessage = () => {
-    if (message.trim()) {
-      // In a real app, this would send the message
-      setMessage("")
+  // Scroll to bottom of transcript when new messages are added
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+  }, [transcriptMessages, typedText])
+
+  // Start typing a specific message
+  const startTypingMessage = (messageIndex: number) => {
+    if (messageIndex < conversationScript.length) {
+      // Find the participant index based on the speaker ID
+      const speakerId = conversationScript[messageIndex].speakerId
+      const participantIndex = participants.findIndex((p) => p.id === speakerId)
+
+      setCurrentSpeakerIndex(participantIndex)
+      setCurrentMessageIndex(messageIndex)
+      setTypedText("")
+      setIsTyping(true)
     }
   }
 
+  // Handle end call
+  const handleEndCall = () => {
+    if (timerRef.current) clearInterval(timerRef.current)
+    if (typingTimerRef.current) clearInterval(typingTimerRef.current)
+    if (messageTimerRef.current) clearTimeout(messageTimerRef.current)
+    router.push("/documents")
+  }
+
+  // Get container heights for scrollable areas
+  useEffect(() => {
+    const updateHeight = () => {
+      if (mainContainerRef.current && videoContainerRef.current) {
+        // Get the main container height
+        const mainHeight = mainContainerRef.current.offsetHeight
+        // Set a minimum height for the scroll areas (80vh or the video container height)
+        const minHeight = Math.max(videoContainerRef.current.offsetHeight, window.innerHeight * 0.7)
+        document.documentElement.style.setProperty("--scroll-area-height", `${minHeight}px`)
+      }
+    }
+
+    updateHeight()
+    window.addEventListener("resize", updateHeight)
+
+    return () => {
+      window.removeEventListener("resize", updateHeight)
+    }
+  }, [])
+
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6" ref={mainContainerRef}>
       <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Conference Call</h1>
-          <p className="text-muted-foreground">Virtual meeting with team members</p>
+        <div className="flex items-center gap-2">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Earth Operation Regular Weekly Meeting</h1>
+            <p className="text-muted-foreground">Conference call with team members</p>
+          </div>
         </div>
-        <Button asChild>
-          <Link href="/conference/select">
-            <Plus className="mr-2 h-4 w-4" /> New Call
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+            <span className="h-2 w-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+            Live • {formatTime(callDuration)}
+          </Badge>
+        </div>
       </div>
 
-      <div className="relative grid grid-cols-1 gap-6 lg:grid-cols-4">
-        <div className={`${showChat || showParticipants ? "lg:col-span-3" : "lg:col-span-4"}`}>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+        <div className="lg:col-span-3">
           <Card className="overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between bg-muted p-4">
               <div className="flex items-center gap-2">
-                <CardTitle>Project Status Meeting</CardTitle>
-                <Badge variant="destructive" className="ml-2">
-                  Recording
-                </Badge>
-                <Badge variant="outline" className="ml-2">
-                  00:45:23
-                </Badge>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => setLayout(layout === "grid" ? "speaker" : "grid")}>
-                  <Layout className="mr-2 h-4 w-4" />
-                  {layout === "grid" ? "Speaker View" : "Grid View"}
-                </Button>
-                <Button variant="outline" size="sm" onClick={toggleFullScreen}>
-                  {isFullScreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
-                </Button>
+                <CardTitle>Earth Operation Regular Weekly Meeting</CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="p-0">
-              <div className="aspect-video bg-black p-4">
-                {layout === "grid" ? (
-                  <div className="grid h-full grid-cols-2 gap-4">
-                    <div className="relative rounded-lg bg-muted">
-                      <div className="absolute bottom-2 left-2 rounded-md bg-background/80 px-2 py-1 text-xs font-medium">
-                        Project Manager
-                        <span className="ml-2 inline-block h-2 w-2 rounded-full bg-green-500"></span>
+            <CardContent className="p-0" ref={videoContainerRef}>
+              <div className="aspect-video bg-black p-2">
+                <div className="grid h-full grid-cols-3 grid-rows-3 gap-2">
+                  {participants.map((participant, index) => (
+                    <div
+                      key={participant.id}
+                      className={`relative rounded-lg ${
+                        participant.speaking ? "ring-2 ring-green-500" : ""
+                      } bg-muted overflow-hidden`}
+                    >
+                      <div className="absolute bottom-1 left-1 z-10 rounded-md bg-background/80 px-1.5 py-0.5 text-xs font-medium">
+                        {participant.name} {participant.isYou && "(You)"}
+                        {participant.speaking && (
+                          <span className="ml-1 inline-block h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                        )}
+                        {participant.muted && <MicOff className="ml-1 inline-block h-3 w-3 text-red-500" />}
                       </div>
                       <div className="flex h-full items-center justify-center">
-                        <Avatar className="h-24 w-24">
-                          <AvatarFallback>PM</AvatarFallback>
-                        </Avatar>
-                      </div>
-                    </div>
-                    <div className="relative rounded-lg bg-muted">
-                      <div className="absolute bottom-2 left-2 rounded-md bg-background/80 px-2 py-1 text-xs font-medium">
-                        You
-                        <span className="ml-2 inline-block h-2 w-2 rounded-full bg-green-500"></span>
-                      </div>
-                      <div className="flex h-full items-center justify-center">
-                        <Avatar className="h-24 w-24">
-                          <AvatarFallback>YO</AvatarFallback>
-                        </Avatar>
-                      </div>
-                    </div>
-                    <div className="relative rounded-lg bg-muted">
-                      <div className="absolute bottom-2 left-2 rounded-md bg-background/80 px-2 py-1 text-xs font-medium">
-                        Marketing Lead
-                        <span className="ml-2 inline-block h-2 w-2 rounded-full bg-yellow-500"></span>
-                      </div>
-                      <div className="flex h-full items-center justify-center">
-                        <Avatar className="h-24 w-24">
-                          <AvatarFallback>ML</AvatarFallback>
-                        </Avatar>
-                      </div>
-                    </div>
-                    <div className="relative rounded-lg bg-muted">
-                      <div className="absolute bottom-2 left-2 rounded-md bg-background/80 px-2 py-1 text-xs font-medium">
-                        Developer
-                        <span className="ml-2 inline-block h-2 w-2 rounded-full bg-gray-500"></span>
-                      </div>
-                      <div className="flex h-full items-center justify-center">
-                        <Avatar className="h-24 w-24">
-                          <AvatarFallback>DE</AvatarFallback>
-                        </Avatar>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex h-full flex-col">
-                    <div className="relative flex-1 rounded-lg bg-muted">
-                      <div className="absolute bottom-2 left-2 rounded-md bg-background/80 px-2 py-1 text-xs font-medium">
-                        Project Manager (Speaking)
-                        <span className="ml-2 inline-block h-2 w-2 rounded-full bg-green-500"></span>
-                      </div>
-                      <div className="flex h-full items-center justify-center">
-                        <Avatar className="h-40 w-40">
-                          <AvatarFallback>PM</AvatarFallback>
-                        </Avatar>
-                      </div>
-                    </div>
-                    <div className="mt-2 flex gap-2">
-                      <div className="relative flex-1 rounded-lg bg-muted p-2">
-                        <div className="flex items-center justify-center">
-                          <Avatar className="h-12 w-12">
-                            <AvatarFallback>YO</AvatarFallback>
+                        {participant.videoOff ? (
+                          <Avatar className="h-16 w-16">
+                            <AvatarImage src={participant.avatar || "/placeholder.svg"} alt={participant.name} />
+                            <AvatarFallback>
+                              {participant.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </AvatarFallback>
                           </Avatar>
-                        </div>
-                        <div className="mt-1 text-center text-xs">You</div>
-                      </div>
-                      <div className="relative flex-1 rounded-lg bg-muted p-2">
-                        <div className="flex items-center justify-center">
-                          <Avatar className="h-12 w-12">
-                            <AvatarFallback>ML</AvatarFallback>
-                          </Avatar>
-                        </div>
-                        <div className="mt-1 text-center text-xs">Marketing</div>
-                      </div>
-                      <div className="relative flex-1 rounded-lg bg-muted p-2">
-                        <div className="flex items-center justify-center">
-                          <Avatar className="h-12 w-12">
-                            <AvatarFallback>DE</AvatarFallback>
-                          </Avatar>
-                        </div>
-                        <div className="mt-1 text-center text-xs">Developer</div>
+                        ) : (
+                          <div className="h-full w-full bg-gray-700 flex items-center justify-center">
+                            <Avatar className="h-16 w-16">
+                              <AvatarImage src={participant.avatar || "/placeholder.svg"} alt={participant.name} />
+                              <AvatarFallback>
+                                {participant.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")}
+                              </AvatarFallback>
+                            </Avatar>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                )}
+                  ))}
+                </div>
               </div>
               <div className="flex flex-wrap items-center justify-center gap-2 border-t p-4">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={isMuted ? "destructive" : "outline"}
-                      size="icon"
-                      onClick={() => setIsMuted(!isMuted)}
-                    >
-                      {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80" align="center">
-                    <div className="space-y-4">
-                      <h4 className="font-medium">Audio Settings</h4>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="mic-volume">Microphone Volume</Label>
-                          <span className="text-sm">80%</span>
-                        </div>
-                        <Slider id="mic-volume" defaultValue={[80]} max={100} step={1} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="mic-select">Microphone</Label>
-                        <select id="mic-select" className="w-full rounded-md border p-2">
-                          <option>Default Microphone</option>
-                          <option>Headset Microphone</option>
-                        </select>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Switch id="noise-cancellation" defaultChecked />
-                        <Label htmlFor="noise-cancellation">Noise Cancellation</Label>
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={isVideoOff ? "destructive" : "outline"}
-                      size="icon"
-                      onClick={() => setIsVideoOff(!isVideoOff)}
-                    >
-                      {isVideoOff ? <VideoOff className="h-4 w-4" /> : <Video className="h-4 w-4" />}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80" align="center">
-                    <div className="space-y-4">
-                      <h4 className="font-medium">Video Settings</h4>
-                      <div className="space-y-2">
-                        <Label htmlFor="camera-select">Camera</Label>
-                        <select id="camera-select" className="w-full rounded-md border p-2">
-                          <option>Default Camera</option>
-                          <option>External Webcam</option>
-                        </select>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Switch id="hd-video" defaultChecked />
-                        <Label htmlFor="hd-video">HD Video</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Switch id="virtual-background" />
-                        <Label htmlFor="virtual-background">Virtual Background</Label>
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-
-                <Button variant={isSharing ? "destructive" : "outline"} onClick={() => setIsSharing(!isSharing)}>
-                  <Share className="mr-2 h-4 w-4" /> {isSharing ? "Stop Sharing" : "Share Screen"}
-                </Button>
-
-                <Button variant={isRaising ? "destructive" : "outline"} onClick={() => setIsRaising(!isRaising)}>
-                  <Hand className="mr-2 h-4 w-4" /> {isRaising ? "Lower Hand" : "Raise Hand"}
+                <Button variant={isMuted ? "destructive" : "outline"} size="icon" onClick={() => setIsMuted(!isMuted)}>
+                  {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                 </Button>
 
                 <Button
-                  variant={showChat ? "default" : "outline"}
-                  onClick={() => {
-                    setShowChat(!showChat)
-                    if (showParticipants && !showChat) setShowParticipants(false)
-                  }}
+                  variant={isVideoOff ? "destructive" : "outline"}
+                  size="icon"
+                  onClick={() => setIsVideoOff(!isVideoOff)}
                 >
-                  <MessageSquare className="mr-2 h-4 w-4" /> Chat
+                  {isVideoOff ? <VideoOff className="h-4 w-4" /> : <Video className="h-4 w-4" />}
                 </Button>
 
                 <Button
-                  variant={showParticipants ? "default" : "outline"}
-                  onClick={() => {
-                    setShowParticipants(!showParticipants)
-                    if (showChat && !showParticipants) setShowChat(false)
-                  }}
+                  variant="destructive"
+                  size="icon"
+                  onClick={handleEndCall}
+                  className={conversationEnded ? "animate-pulse ring-2 ring-red-500 relative" : ""}
                 >
-                  <Users className="mr-2 h-4 w-4" /> Participants
-                </Button>
-
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="icon">
-                      <Settings className="h-4 w-4" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80" align="end">
-                    <div className="space-y-4">
-                      <h4 className="font-medium">Meeting Settings</h4>
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <Switch id="record-meeting" defaultChecked />
-                          <Label htmlFor="record-meeting">Record Meeting</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Switch id="mute-entry" />
-                          <Label htmlFor="mute-entry">Mute on Entry</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Switch id="waiting-room" />
-                          <Label htmlFor="waiting-room">Enable Waiting Room</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Switch id="chat-enabled" defaultChecked />
-                          <Label htmlFor="chat-enabled">Enable Chat</Label>
-                        </div>
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-
-                <Button variant="destructive" size="icon">
                   <Phone className="h-4 w-4" />
+                  {conversationEnded && (
+                    <span className="absolute -top-8 whitespace-nowrap bg-black text-white text-xs px-2 py-1 rounded">
+                      End call and check documents
+                    </span>
+                  )}
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {(showChat || showParticipants) && (
-          <div className="lg:col-span-1">
-            <Card className="h-full">
+        <div className="lg:col-span-1">
+          <Card className="h-full">
+            <Tabs defaultValue="transcript">
               <CardHeader className="border-b p-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle>{showChat ? "Chat" : "Participants (4)"}</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => (showChat ? setShowChat(false) : setShowParticipants(false))}
-                  >
-                    {showChat ? <PanelRight className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />}
-                  </Button>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="transcript">
+                      <FileText className="mr-2 h-4 w-4" /> Transcript
+                    </TabsTrigger>
+                    <TabsTrigger value="participants">
+                      <Users className="mr-2 h-4 w-4" /> Participants
+                    </TabsTrigger>
+                  </TabsList>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
-                {showChat ? (
-                  <div className="flex h-[500px] flex-col">
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                      {chatMessages.map((message, index) => (
-                        <div key={index} className="flex flex-col">
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-6 w-6">
-                              <AvatarFallback>{message.sender.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <span className="font-medium">{message.sender}</span>
-                            <span className="text-xs text-muted-foreground">{message.time}</span>
+                <TabsContent value="transcript" className="mt-0">
+                  <div className="h-[var(--scroll-area-height,60vh)] overflow-auto p-4" ref={scrollRef}>
+                    <div className="space-y-4">
+                      {transcriptMessages.map((message) => (
+                        <div key={message.id} className="border-b pb-2">
+                          <div className="flex items-center">
+                            <span className="font-medium">{message.speaker}</span>
                           </div>
-                          <p className="ml-8 text-sm">{message.content}</p>
+                          <p className="mt-1 text-sm">{message.content}</p>
+                        </div>
+                      ))}
+
+                      {/* Currently typing message */}
+                      {isTyping && currentMessageIndex < conversationScript.length && (
+                        <div className="border-b pb-2">
+                          <div className="flex items-center">
+                            <span className="font-medium">{conversationScript[currentMessageIndex].speaker}</span>
+                          </div>
+                          <p className="mt-1 text-sm">
+                            {typedText}
+                            <span className="inline-block h-4 w-1 bg-black ml-1 animate-pulse"></span>
+                          </p>
+                        </div>
+                      )}
+
+                      {/* End of conversation guidance */}
+                      {conversationEnded && (
+                        <div className="mt-6 p-3 bg-blue-50 rounded-md border border-blue-200">
+                          <p className="text-sm font-medium text-blue-800">Meeting is complete!</p>
+                          <div className="mt-2 flex items-center text-sm text-blue-700">
+                            <Phone className="h-4 w-4 mr-2" />
+                            <span>Click the red phone button to end the call</span>
+                          </div>
+                          <div className="mt-2 flex items-center text-sm text-blue-700">
+                            <FolderOpen className="h-4 w-4 mr-2" />
+                            <span>Then check the Documents section for reference materials</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </TabsContent>
+                <TabsContent value="participants" className="mt-0">
+                  <div className="h-[var(--scroll-area-height,70vh)] overflow-auto">
+                    <div className="divide-y">
+                      {participants.map((participant) => (
+                        <div
+                          key={participant.id}
+                          className={`flex items-center gap-3 p-3 ${participant.speaking ? "bg-green-50" : ""}`}
+                        >
+                          <Avatar>
+                            <AvatarImage src={participant.avatar || "/placeholder.svg"} alt={participant.name} />
+                            <AvatarFallback>
+                              {participant.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <p className="font-medium">
+                              {participant.name}{" "}
+                              {participant.role === "You (Meeting Host)" && (
+                                <span className="text-xs text-muted-foreground">(Host)</span>
+                              )}
+                              {participant.isYou && <span className="text-xs text-muted-foreground">(You)</span>}
+                              {participant.speaking && (
+                                <span className="ml-2 inline-block h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                              )}
+                            </p>
+                            <div className="flex items-center gap-2">
+                              {participant.muted ? (
+                                <MicOff className="h-3 w-3 text-muted-foreground" />
+                              ) : (
+                                <Mic className="h-3 w-3 text-green-500" />
+                              )}
+                              {participant.videoOff ? (
+                                <VideoOff className="h-3 w-3 text-muted-foreground" />
+                              ) : (
+                                <Video className="h-3 w-3 text-green-500" />
+                              )}
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
-                    <div className="border-t p-4">
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Type a message..."
-                          className="flex-1"
-                          value={message}
-                          onChange={(e) => setMessage(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                              e.preventDefault()
-                              handleSendMessage()
-                            }
-                          }}
-                        />
-                        <Button onClick={handleSendMessage}>Send</Button>
-                      </div>
-                    </div>
                   </div>
-                ) : (
-                  <div className="divide-y">
-                    {participants.map((participant) => (
-                      <div key={participant.id} className="flex items-center gap-3 p-3">
-                        <Avatar>
-                          {participant.avatar && <AvatarImage src={participant.avatar || "/placeholder.svg"} />}
-                          <AvatarFallback>
-                            {participant.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <p className="font-medium">
-                            {participant.name}{" "}
-                            {participant.isHost && <span className="text-xs text-muted-foreground">(Host)</span>}
-                          </p>
-                          <div className="flex items-center gap-2">
-                            {participant.micMuted ? (
-                              <MicOff className="h-3 w-3 text-muted-foreground" />
-                            ) : (
-                              <Mic className="h-3 w-3 text-green-500" />
-                            )}
-                            {participant.videoOff ? (
-                              <VideoOff className="h-3 w-3 text-muted-foreground" />
-                            ) : (
-                              <Video className="h-3 w-3 text-green-500" />
-                            )}
-                            {participant.isRaisingHand && <Hand className="h-3 w-3 text-yellow-500" />}
-                          </div>
-                        </div>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent align="end" className="w-40">
-                            <div className="space-y-1">
-                              <Button variant="ghost" size="sm" className="w-full justify-start">
-                                {participant.micMuted ? "Unmute" : "Mute"}
-                              </Button>
-                              <Button variant="ghost" size="sm" className="w-full justify-start">
-                                Pin Video
-                              </Button>
-                              <Button variant="ghost" size="sm" className="w-full justify-start">
-                                Private Chat
-                              </Button>
-                              <Button variant="ghost" size="sm" className="w-full justify-start text-red-500">
-                                Remove
-                              </Button>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                </TabsContent>
               </CardContent>
-            </Card>
-          </div>
-        )}
+            </Tabs>
+          </Card>
+        </div>
       </div>
+
+      <style jsx global>{`
+        .chatbot-button {
+          display: none !important;
+        }
+      `}</style>
     </div>
   )
 }
-
-interface Participant {
-  id: number
-  name: string
-  avatar?: string
-  isHost?: boolean
-  micMuted: boolean
-  videoOff: boolean
-  isRaisingHand?: boolean
-}
-
-const participants: Participant[] = [
-  {
-    id: 1,
-    name: "Project Manager",
-    isHost: true,
-    micMuted: false,
-    videoOff: false,
-    isRaisingHand: false,
-  },
-  {
-    id: 2,
-    name: "You",
-    micMuted: false,
-    videoOff: false,
-    isRaisingHand: false,
-  },
-  {
-    id: 3,
-    name: "Marketing Lead",
-    micMuted: true,
-    videoOff: false,
-    isRaisingHand: true,
-  },
-  {
-    id: 4,
-    name: "Developer",
-    micMuted: false,
-    videoOff: true,
-    isRaisingHand: false,
-  },
-]
-
-interface ChatMessage {
-  sender: string
-  content: string
-  time: string
-}
-
-const chatMessages: ChatMessage[] = [
-  {
-    sender: "Project Manager",
-    content: "Welcome everyone to our project status meeting.",
-    time: "10:01 AM",
-  },
-  {
-    sender: "Marketing Lead",
-    content: "Thanks for organizing this. I have some updates on the campaign.",
-    time: "10:02 AM",
-  },
-  {
-    sender: "You",
-    content: "I've completed the first milestone tasks ahead of schedule.",
-    time: "10:03 AM",
-  },
-  {
-    sender: "Developer",
-    content: "I'm still working on the backend integration. Should be done by tomorrow.",
-    time: "10:04 AM",
-  },
-  {
-    sender: "Project Manager",
-    content: "Great progress everyone! Let's go through each component in detail.",
-    time: "10:05 AM",
-  },
-]

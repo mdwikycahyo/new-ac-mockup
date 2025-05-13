@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, Search, Video, X } from "lucide-react"
 import Link from "next/link"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useRouter } from "next/navigation"
 
@@ -69,13 +68,6 @@ export default function SelectContactsPage() {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <Tabs defaultValue="all" className="p-4">
-                <TabsList>
-                  <TabsTrigger value="all">All Contacts</TabsTrigger>
-                  <TabsTrigger value="recent">Recent</TabsTrigger>
-                  <TabsTrigger value="favorites">Favorites</TabsTrigger>
-                </TabsList>
-              </Tabs>
               <div className="max-h-[400px] overflow-y-auto">
                 <div className="divide-y">
                   {filteredContacts.map((contact) => (
@@ -130,7 +122,7 @@ export default function SelectContactsPage() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <label htmlFor="title" className="text-sm font-medium">
-                    Meeting Title
+                    Meeting Title <span className="text-red-500">*</span>
                   </label>
                   <Input
                     id="title"
@@ -138,6 +130,7 @@ export default function SelectContactsPage() {
                     value={meetingTitle}
                     onChange={(e) => setMeetingTitle(e.target.value)}
                   />
+                  {meetingTitle.trim() === "" && <p className="text-xs text-red-500">Meeting title is required</p>}
                 </div>
 
                 <div>
@@ -187,7 +180,7 @@ export default function SelectContactsPage() {
                     className="w-full"
                     size="lg"
                     onClick={handleStartCall}
-                    disabled={selectedContacts.length === 0}
+                    disabled={selectedContacts.length === 0 || meetingTitle.trim() === ""}
                   >
                     <Video className="mr-2 h-4 w-4" /> Start Call
                   </Button>
@@ -207,58 +200,37 @@ interface Contact {
   role: string
   status: "online" | "offline" | "away"
   avatar?: string
-  favorite?: boolean
 }
 
 const contacts: Contact[] = [
   {
     id: 1,
-    name: "Project Manager",
-    role: "Management",
+    name: "AVP of Human Resources",
+    role: "Meeting Host",
     status: "online",
-    favorite: true,
   },
   {
     id: 2,
-    name: "Marketing Lead",
-    role: "Marketing",
+    name: "General Manager - Production",
+    role: "General Manager",
     status: "away",
   },
   {
     id: 3,
-    name: "Developer",
-    role: "Engineering",
+    name: "General Manager - Quality Control",
+    role: "General Manager",
     status: "online",
   },
   {
     id: 4,
-    name: "HR Representative",
-    role: "Human Resources",
+    name: "Head of Supply Chain",
+    role: "Department Head",
     status: "offline",
   },
   {
     id: 5,
-    name: "Finance Director",
-    role: "Finance",
+    name: "Head of Operations Planning",
+    role: "Department Head",
     status: "online",
-    favorite: true,
-  },
-  {
-    id: 6,
-    name: "Sales Manager",
-    role: "Sales",
-    status: "away",
-  },
-  {
-    id: 7,
-    name: "Product Designer",
-    role: "Design",
-    status: "online",
-  },
-  {
-    id: 8,
-    name: "Customer Support",
-    role: "Support",
-    status: "offline",
   },
 ]
