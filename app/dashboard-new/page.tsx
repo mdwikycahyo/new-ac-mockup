@@ -8,10 +8,12 @@ import Image from "next/image"
 import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
+import { useDemoMode } from "@/components/context/demo-mode-context"
 
 export default function DashboardNew() {
   const [currentMessage, setCurrentMessage] = useState(0)
   const [videoModalOpen, setVideoModalOpen] = useState(false)
+  const { demoMode, assessmentCompleted } = useDemoMode()
 
   const messages = [
     {
@@ -22,32 +24,21 @@ export default function DashboardNew() {
         <div className="space-y-4">
           <p className="text-lg font-medium">Dear Participant,</p>
           <p>
-            Welcome to our Workplace Assessment Platform. This assessment is designed to evaluate your skills in a
-            simulated work environment that mirrors the challenges and tasks you might encounter in a real workplace
-            setting as an AVP of Operations.
+            Kita tengah memasuki fase penting dalam perjalanan Amboja sebagai perusahaan teknologi yang berbasis pada
+            keberlanjutan dan inovasi. Setelah bertahun-tahun berfokus pada perluasan pasar dan efisiensi operasional,
+            kini saatnya kita memperkuat <em>fondasi manusia</em> di balik semua pencapaian itu.
           </p>
           <p>
-            <strong>Our objectives for this assessment are:</strong>
-          </p>
-          <ul className="ml-6 list-disc space-y-2">
-            <li>To provide you with an opportunity to demonstrate your operational leadership skills</li>
-            <li>
-              To observe how you approach problem-solving, resource allocation, and team management in a professional
-              context
-            </li>
-            <li>To evaluate your ability to make strategic decisions under time constraints</li>
-          </ul>
-          <p>
-            Remember, this is not just an evaluation but also a learning experience. We encourage you to approach each
-            task thoughtfully and to utilize the resources available to you throughout the assessment.
+            Saya percaya bahwa keberhasilan jangka panjang hanya bisa dicapai jika kita mampu membangun budaya kerja
+            yang kolaboratif, sehat secara psikologis, dan menyenangkan. Keseimbangan antara target dan keterlibatan
+            karyawan adalah kunci untuk menjaga performa tetap stabil di tengah tekanan.
           </p>
           <p>
-            The platform simulates one workday at our company. You'll have access to email, chat, calendar, and other
-            workplace tools. Complete the assigned tasks to the best of your ability within the given timeframe.
+            Karena itu, saya ingin mengajak seluruh pimpinan untuk memberikan ruang bagi inisiatif yang mampu memperkuat
+            keterikatan dan kebersamaan tim. Kegiatan engagement internal bukan sekadar acara hiburan, melainkan
+            investasi terhadap ketahanan organisasi kita di masa depan.
           </p>
-          <p className="font-medium">
-            We value your participation and look forward to seeing your unique approach to the challenges ahead.
-          </p>
+          <p>Terima kasih atas dedikasi dan partisipasi Anda.</p>
           <p>Best regards,</p>
           <div className="pt-2">
             <p className="font-medium">Sarah Johnson</p>
@@ -55,7 +46,7 @@ export default function DashboardNew() {
           </div>
         </div>
       ),
-      date: "May 8, 2025",
+      date: "May 12, 2025",
       duration: "Approximately 90 minutes",
     },
     {
@@ -64,49 +55,43 @@ export default function DashboardNew() {
       role: "VP of Solution",
       content: (
         <div className="space-y-4">
-          <p className="text-lg font-medium">Dear Future AVP of Operations,</p>
+          <p className="text-lg font-medium">Dear Team,</p>
           <p>
-            As the VP of Solution, I'm excited to see how you'll handle the operational challenges we've prepared for
-            you in this assessment.
+            Sejalan dengan arahan President Director, saya ingin memastikan bahwa unit Earth Operation juga aktif
+            memperkuat keterlibatan karyawan di tengah aktivitas operasional yang padat.
           </p>
-          <p>
-            <strong>Your specific responsibilities in this scenario will include:</strong>
-          </p>
+          <p>Berikut beberapa hal yang perlu menjadi perhatian dalam kegiatan engagement:</p>
           <ul className="ml-6 list-disc space-y-2">
-            <li>Analyzing operational bottlenecks and proposing efficiency improvements</li>
-            <li>Coordinating cross-functional teams to resolve a time-sensitive production issue</li>
-            <li>Developing a resource allocation plan for an upcoming project launch</li>
-            <li>Communicating operational updates to various stakeholders</li>
+            <li>Mendorong aktivitas engagement yang relevan dan ringan</li>
+            <li>Melibatkan lintas fungsi dalam proses perencanaan</li>
+            <li>Mengutamakan inklusivitas dan keseimbangan dengan beban kerja</li>
+            <li>Menjadikan kegiatan ini sebagai sarana membangun komunikasi yang lebih terbuka</li>
           </ul>
           <p>
-            Throughout this assessment, you'll need to balance immediate operational needs with long-term strategic
-            goals. You'll have access to various data points, team member profiles, and communication channels to help
-            you make informed decisions.
+            Dengan semangat kolaborasi, saya yakin kita bisa menciptakan dampak positif yang berkelanjutan, tidak hanya
+            untuk performa bisnis, tetapi juga untuk semangat tim Amboja.
           </p>
-          <p>
-            <strong>Key success factors we'll be evaluating:</strong>
-          </p>
-          <ul className="ml-6 list-disc space-y-2">
-            <li>Analytical thinking and problem-solving approach</li>
-            <li>Resource optimization and prioritization skills</li>
-            <li>Communication clarity and stakeholder management</li>
-            <li>Adaptability when facing unexpected challenges</li>
-          </ul>
-          <p>
-            I encourage you to leverage your operational expertise while remaining open to the unique aspects of our
-            company's processes.
-          </p>
-          <p>Looking forward to reviewing your performance,</p>
+          <p>Sukses untuk pelaksanaan kegiatan ini!</p>
           <div className="pt-2">
             <p className="font-medium">Michael Chen</p>
             <p className="text-sm text-muted-foreground">VP of Solution</p>
           </div>
         </div>
       ),
-      date: "May 8, 2025",
+      date: "May 12, 2025",
       duration: "Approximately 90 minutes",
     },
   ]
+
+  // Function to navigate to previous message
+  const goToPrevious = () => {
+    setCurrentMessage((prev) => (prev === 0 ? messages.length - 1 : prev - 1))
+  }
+
+  // Function to navigate to next message
+  const goToNext = () => {
+    setCurrentMessage((prev) => (prev === messages.length - 1 ? 0 : prev + 1))
+  }
 
   return (
     <div className="container mx-auto p-6">
@@ -114,9 +99,13 @@ export default function DashboardNew() {
       <div className="mb-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Welcome, Participant</h1>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {demoMode ? "Welcome, AVP of Earth Operation" : "Welcome, Participant"}
+            </h1>
             <p className="text-muted-foreground">
-              Your workplace assessment begins today. We're excited to see your skills in action.
+              {demoMode
+                ? "Your workday begins now. We're looking forward to your leadership."
+                : "Your workplace assessment begins today. We're excited to see your skills in action."}
             </p>
           </div>
           <Button size="lg" className="gap-2" onClick={() => setVideoModalOpen(true)}>
@@ -129,19 +118,30 @@ export default function DashboardNew() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle>Assessment Progress</CardTitle>
-            <CardDescription>You have completed 2 of 8 assessment tasks</CardDescription>
+            <CardDescription>
+              {demoMode && assessmentCompleted
+                ? "You have completed 1 of 1 assessment task"
+                : demoMode
+                  ? "You have completed 0 of 1 assessment task"
+                  : "You have completed 2 of 8 assessment tasks"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <Progress value={25} className="h-2 w-full" />
+            <Progress value={demoMode && assessmentCompleted ? 100 : demoMode ? 0 : 25} className="h-2 w-full" />
             <div className="mt-2 flex justify-between text-sm text-muted-foreground">
-              <span>25% Complete</span>
-              <span>Estimated time remaining: 45 minutes</span>
+              <span>
+                {demoMode && assessmentCompleted ? "100% Complete" : demoMode ? "0% Complete" : "25% Complete"}
+              </span>
+              <span>
+                Estimated time remaining:{" "}
+                {demoMode && assessmentCompleted ? "0 minutes" : demoMode ? "60 minutes" : "45 minutes"}
+              </span>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Executive Messages Section - Improved Carousel */}
+      {/* Executive Messages Section - Improved Carousel with more visible navigation */}
       <div className="mb-8 relative">
         {/* Message Counter Badge - More prominent */}
         <div className="absolute -top-4 right-0 z-10">
@@ -150,24 +150,24 @@ export default function DashboardNew() {
           </Badge>
         </div>
 
-        {/* Navigation Arrows - Moved further out */}
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-8 z-10 hidden md:block">
+        {/* Navigation Arrows - More visible, fixed absolute positioning outside the card */}
+        <div className="absolute left-[-24px] top-1/2 -translate-y-1/2 z-20">
           <Button
-            variant="outline"
+            variant="default"
             size="icon"
-            className="h-12 w-12 rounded-full bg-background shadow-lg border-2"
-            onClick={() => setCurrentMessage((prev) => (prev === 0 ? messages.length - 1 : prev - 1))}
+            className="h-12 w-12 rounded-full bg-primary text-white shadow-lg border-2 border-white hover:bg-primary/80 hover:scale-105 transition-all"
+            onClick={goToPrevious}
           >
             <ChevronLeft className="h-6 w-6" />
           </Button>
         </div>
 
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-8 z-10 hidden md:block">
+        <div className="absolute right-[-24px] top-1/2 -translate-y-1/2 z-20">
           <Button
-            variant="outline"
+            variant="default"
             size="icon"
-            className="h-12 w-12 rounded-full bg-background shadow-lg border-2"
-            onClick={() => setCurrentMessage((prev) => (prev === messages.length - 1 ? 0 : prev + 1))}
+            className="h-12 w-12 rounded-full bg-primary text-white shadow-lg border-2 border-white hover:bg-primary/80 hover:scale-105 transition-all"
+            onClick={goToNext}
           >
             <ChevronRight className="h-6 w-6" />
           </Button>
@@ -205,14 +205,14 @@ export default function DashboardNew() {
                 </div>
               </div>
 
-              {/* Carousel Indicator Dots - Even More Prominent */}
-              <div className="flex gap-4">
+              {/* Carousel Indicator Dots - Made more visible */}
+              <div className="flex gap-3">
                 {messages.map((_, index) => (
                   <button
                     key={index}
                     className={`h-4 w-4 rounded-full transition-all ${
                       index === currentMessage
-                        ? "bg-black scale-125 ring-2 ring-offset-2 ring-black"
+                        ? "bg-primary scale-125 ring-2 ring-offset-2 ring-primary"
                         : "bg-gray-300 hover:bg-gray-400"
                     }`}
                     onClick={() => setCurrentMessage(index)}
@@ -239,20 +239,10 @@ export default function DashboardNew() {
 
             {/* Mobile Navigation Controls */}
             <div className="mt-4 flex w-full items-center justify-between md:hidden">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentMessage((prev) => (prev === 0 ? messages.length - 1 : prev - 1))}
-                className="gap-1"
-              >
+              <Button variant="default" size="sm" onClick={goToPrevious} className="gap-1">
                 <ChevronLeft className="h-4 w-4" /> Previous
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentMessage((prev) => (prev === messages.length - 1 ? 0 : prev + 1))}
-                className="gap-1"
-              >
+              <Button variant="default" size="sm" onClick={goToNext} className="gap-1">
                 Next <ChevronRight className="h-4 w-4" />
               </Button>
             </div>

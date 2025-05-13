@@ -774,7 +774,6 @@ function ProjectTimelineView({ projects, weeks, formatWeekRange, isCurrentWeek, 
     </Card>
   )
 }
-
 // Helper function to calculate position percentage for weekly view
 function calculatePosition(startDate, weeks) {
   if (weeks.length === 0) return 0
@@ -810,3 +809,4 @@ function calculateWidth(startDate, endDate, weeks) {
   // Calculate width as percentage
   return ((adjustedEnd.getTime() - adjustedStart.getTime()) / totalRange) * 100
 }
+

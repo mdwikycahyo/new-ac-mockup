@@ -1,34 +1,43 @@
 import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import { ParticipantLayout } from "@/components/participant-layout"
-import { NotificationPopup } from "@/components/notification-popup"
+import { Sidebar } from "@/components/sidebar"
+import { DemoModeProvider } from "@/components/context/demo-mode-context"
+import { NotificationProvider } from "@/components/context/notification-context"
+import { DemoScenarioManager } from "@/components/demo-scenario-manager"
+import { DocumentChatbot } from "@/components/document-chatbot"
+import { DocumentProvider } from "@/components/context/document-context"
+import { DebugLocalStorage } from "@/components/debug-local-storage"
 
-const inter = Inter({ subsets: ["latin"] })
-
-export const metadata: Metadata = {
-  title: "Workplace Assessment Platform",
-  description: "A comprehensive workplace assessment platform",
-  generator: "v0.dev",
-}
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+    <html lang="en">
+      <head>
+        <title>Workplace Assessment Platform</title>
+        <meta name="description" content="A simulation of workplace conditions for assessment" />
+      </head>
+      <body>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <div className="flex min-h-screen">
-            <ParticipantLayout>{children}</ParticipantLayout>
-          </div>
-          <NotificationPopup />
+          <DemoModeProvider>
+            <NotificationProvider>
+              <DocumentProvider>
+                <div className="flex min-h-screen">
+                  <Sidebar />
+                  <main className="flex-1 bg-background">{children}</main>
+                  <DemoScenarioManager />
+                  <DocumentChatbot />
+                </div>
+              </DocumentProvider>
+            </NotificationProvider>
+          </DemoModeProvider>
         </ThemeProvider>
+        {/* Debug tools */}
+        <DebugLocalStorage />
       </body>
     </html>
   )
 }
+
+export const metadata = {
+      generator: 'v0.dev'
+    };

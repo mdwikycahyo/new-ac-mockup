@@ -5,7 +5,9 @@ import { X, Bell, Mail, MessageSquare, CheckSquare, ChevronLeft, ChevronRight } 
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import Link from "next/link"
+import { useDemoMode } from "@/components/context/demo-mode-context"
+import { useNotification } from "@/components/context/notification-context"
+import { useRouter, usePathname } from "next/navigation"
 
 type NotificationType = "email" | "chat" | "task"
 
@@ -54,21 +56,84 @@ const mockNotifications: Notification[] = [
   },
 ]
 
+// Add these demo notifications
+const demoNotifications: Notification[] = [
+  {
+    id: "demo1",
+    type: "chat",
+    title: "New Message from AVP of Human Resources",
+    message:
+      "Hai, selamat pagi! Saya ingin follow up diskusi kita sebelumnya soal kegiatan Team Building. Sudah ada gambaran aktivitas yang ingin anda jalankan?",
+    time: "Just now",
+    link: "/chat",
+    read: false,
+    viewed: false,
+  },
+  {
+    id: "demo2",
+    type: "chat",
+    title: "New Message from AVP of Human Resources",
+    message: "Bagaimana, sudah ada ide untuk kegiatan engagement tim? Saya lihat Anda sudah membuka dokumen referensi.",
+    time: "Just now",
+    link: "/chat",
+    read: false,
+    viewed: false,
+  },
+]
+
 export function NotificationPopup() {
   const [notifications, setNotifications] = useState<Notification[]>([])
-  const [visible, setVisible] = useState(false)
   const [currentNotificationIndex, setCurrentNotificationIndex] = useState(0)
+  const { demoMode } = useDemoMode()
+  const {
+    popupNotificationVisible,
+    hidePopupNotification,
+    hideChatNotification,
+    clearAllNotifications,
+    updateSidebarActiveItem,
+  } = useNotification()
+  const router = useRouter()
+  const pathname = usePathname()
 
-  // Simulate receiving new notifications
+  // Add state for demo notification index
+  const [demoNotificationIndex, setDemoNotificationIndex] = useState(0)
+
+  // Clear notification when navigating to the related page
   useEffect(() => {
+    if (notifications.length > 0) {
+      const activeNotifications = notifications.filter((n) => !n.viewed)
+      if (activeNotifications.length > 0) {
+        const currentNotification = activeNotifications[currentNotificationIndex]
+        if (pathname === currentNotification.link) {
+          markAsRead(currentNotification.id)
+        }
+      }
+    }
+  }, [pathname])
+
+  // Then update the useEffect
+  useEffect(() => {
+    if (demoMode) {
+      // Check if we should show the second notification (after document viewing)
+      const shouldShowSecondNotification = localStorage.getItem("continueEngagementChat") === "true"
+
+      if (shouldShowSecondNotification) {
+        setDemoNotificationIndex(1) // Show the second notification
+      } else {
+        setDemoNotificationIndex(0) // Show the first notification
+      }
+
+      return
+    }
+
+    // Normal mode notification handling
     // Initial notification after 10 seconds
     const timer = setTimeout(() => {
       setNotifications([mockNotifications[0]])
-      setVisible(true)
 
       // Auto-hide after 5 seconds if not interacted with
       const hideTimer = setTimeout(() => {
-        if (visible) setVisible(false)
+        hidePopupNotification()
       }, 5000)
 
       return () => clearTimeout(hideTimer)
@@ -79,12 +144,11 @@ export function NotificationPopup() {
       setNotifications((prev) => {
         if (prev.length < mockNotifications.length) {
           const newNotification = mockNotifications[prev.length]
-          setVisible(true)
           setCurrentNotificationIndex(prev.length)
 
           // Auto-hide after 5 seconds
           setTimeout(() => {
-            if (visible) setVisible(false)
+            hidePopupNotification()
           }, 5000)
 
           return [...prev, newNotification]
@@ -97,10 +161,10 @@ export function NotificationPopup() {
       clearTimeout(timer)
       clearInterval(intervalTimer)
     }
-  }, [])
+  }, [demoMode, hidePopupNotification])
 
   const dismissNotification = () => {
-    setVisible(false)
+    hidePopupNotification()
   }
 
   const markAsRead = (id: string) => {
@@ -115,7 +179,7 @@ export function NotificationPopup() {
 
       // If there are no more active notifications, hide the popup
       if (activeNotifications.length === 0) {
-        setVisible(false)
+        hidePopupNotification()
         return updatedNotifications
       }
 
@@ -128,14 +192,103 @@ export function NotificationPopup() {
       return updatedNotifications
     })
 
-    setVisible(false)
+    hidePopupNotification()
+  }
+
+  const clearNotification = (id: string) => {
+    // Find the notification to get its link
+    const notification = notifications.find((n) => n.id === id)
+
+    if (notification) {
+      // If it's a chat notification, update the sidebar
+      if (notification.type === "chat") {
+        hideChatNotification()
+      }
+
+      // Mark notification as read and viewed
+      markAsRead(id)
+
+      // Clear all notifications in the context
+      clearAllNotifications()
+
+      // Hide the popup
+      hidePopupNotification()
+
+      // Update the sidebar active item BEFORE navigation
+      updateSidebarActiveItem(notification.link)
+
+      // Navigate to the link
+      router.push(notification.link)
+    }
+  }
+
+  // Add a handler for demo notification actions
+  const handleDemoNotificationAction = () => {
+    // Hide the popup
+    hidePopupNotification()
+
+    // Navigate to chat
+    router.push("/chat")
   }
 
   // Get only unviewed notifications for the carousel
   const activeNotifications = notifications.filter((n) => !n.viewed)
 
-  // If no active notifications or not visible, don't render
-  if (!visible || activeNotifications.length === 0) return null
+  // If not visible, don't render
+  if (!popupNotificationVisible) return null
+
+  // For demo mode, show the appropriate demo notification
+  if (demoMode) {
+    const currentNotification = demoNotifications[demoNotificationIndex]
+
+    return (
+      <div className="fixed top-4 right-4 z-50 w-[400px] animate-in fade-in slide-in-from-top-5 duration-300">
+        <Card className="overflow-hidden border-2 shadow-lg w-full relative">
+          <div className="flex items-center justify-between bg-black p-3 text-white">
+            <div className="flex items-center gap-2">
+              <Bell className="h-5 w-5" />
+              <span className="font-medium">New Notification</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-white hover:bg-white/20"
+              onClick={dismissNotification}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <div className="p-4">
+            {/* Type indicator and icon in one row */}
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-600">
+                <MessageSquare className="h-5 w-5" />
+              </div>
+              <span className="inline-block rounded-full px-2 py-1 text-xs font-medium bg-green-100 text-green-600">
+                Chat Message
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">Just now</p>
+          </div>
+
+          {/* Content with padding to avoid navigation buttons */}
+          <div className="px-6">
+            <h4 className="mb-4 font-medium">{currentNotification.title}</h4>
+          </div>
+
+          <div className="flex justify-end gap-2 p-4">
+            <Button variant="outline" size="sm" onClick={dismissNotification}>
+              Dismiss
+            </Button>
+            <Button size="sm" onClick={handleDemoNotificationAction}>
+              View
+            </Button>
+          </div>
+        </Card>
+      </div>
+    )
+  }
 
   const currentNotification = activeNotifications[Math.min(currentNotificationIndex, activeNotifications.length - 1)]
 
@@ -244,8 +397,8 @@ export function NotificationPopup() {
             <Button variant="outline" size="sm" onClick={dismissNotification}>
               Dismiss
             </Button>
-            <Button size="sm" onClick={() => markAsRead(currentNotification.id)} asChild>
-              <Link href={currentNotification.link}>View</Link>
+            <Button size="sm" onClick={() => clearNotification(currentNotification.id)}>
+              View
             </Button>
           </div>
         </div>

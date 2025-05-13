@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Search, Plus, File, FileText, FileSpreadsheet, FilePieChart, Clock, FolderOpen } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { DocumentChatbot } from "@/components/document-chatbot"
 import Link from "next/link"
 import { TemplateSelectionModal } from "@/components/template-selection-modal"
@@ -16,6 +16,33 @@ export default function ResourcesPage() {
   const [showTemplateModal, setShowTemplateModal] = useState(false)
   const [activeTab, setActiveTab] = useState("documents")
   const router = useRouter()
+  
+  return (
+    <Suspense fallback={<div className="container mx-auto p-6">Loading resources...</div>}>
+      <ResourcesContent 
+        showTemplateModal={showTemplateModal} 
+        setShowTemplateModal={setShowTemplateModal}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        router={router}
+      />
+    </Suspense>
+  )
+}
+
+function ResourcesContent({ 
+  showTemplateModal, 
+  setShowTemplateModal,
+  activeTab,
+  setActiveTab,
+  router
+}: { 
+  showTemplateModal: boolean;
+  setShowTemplateModal: (show: boolean) => void;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  router: ReturnType<typeof useRouter>;
+}) {
   const searchParams = useSearchParams()
 
   // Restore active tab from URL when returning from document view
@@ -24,7 +51,7 @@ export default function ResourcesPage() {
     if (tab) {
       setActiveTab(tab)
     }
-  }, [searchParams])
+  }, [searchParams, setActiveTab])
 
   // Add smooth transitions to tab content
   return (

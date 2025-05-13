@@ -2,10 +2,8 @@
 
 import type React from "react"
 
-import { useSearchParams } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import {
   Bold,
@@ -13,97 +11,203 @@ import {
   Underline,
   List,
   ListOrdered,
-  ImageIcon,
-  Table,
-  CheckSquare,
   AlignLeft,
   AlignCenter,
   AlignRight,
+  ChevronLeft,
   Save,
-  ArrowLeft,
-  MoreHorizontal,
+  Table,
   Link2,
-  ChevronDown,
+  Heading1,
+  Heading2,
+  ImageIcon,
+  RefreshCw,
 } from "lucide-react"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useDemoMode } from "@/components/context/demo-mode-context"
+import { toast } from "@/components/ui/use-toast"
+import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { getTemplateContent } from "@/lib/document-templates"
+import { ResetConfirmationDialog } from "@/components/dialogs/reset-confirmation-dialog"
 
-export default function DocumentEditor() {
+export default function DocumentEditorPage() {
+  const router = useRouter()
   const searchParams = useSearchParams()
-  const templateId = searchParams.get("template") || "blank"
+  const templateId = searchParams.get("template")
   const documentId = searchParams.get("document")
+  const returnTab = searchParams.get("tab") || "documents"
+  const { demoMode } = useDemoMode()
+
   const [title, setTitle] = useState("")
-  const [blocks, setBlocks] = useState<Block[]>([{ id: "1", type: "paragraph", content: "" }])
-  const [selectedBlockId, setSelectedBlockId] = useState("1")
-  const editorRef = useRef<HTMLDivElement>(null)
-
-  // Add state for active formats
+  const [content, setContent] = useState("")
+  const [initialContent, setInitialContent] = useState("")
+  const [initialTitle, setInitialTitle] = useState("")
+  const [isSaving, setIsSaving] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
+  const [showResetConfirmation, setShowResetConfirmation] = useState(false)
   const [activeFormats, setActiveFormats] = useState<string[]>([])
+  const editorRef = useRef<HTMLDivElement>(null)
+  const [fontSize, setFontSize] = useState("100%")
 
-  // Load template content based on templateId or documentId
+  // Load template content based on template ID
   useEffect(() => {
-    if (documentId) {
-      // If editing an existing document
-      const documentContent = getDocumentContent(documentId)
-      setTitle(documentContent.title)
-      setBlocks(documentContent.blocks)
-    } else {
-      // If creating from template
+    if (templateId) {
       const template = getTemplateContent(templateId)
       setTitle(template.title)
-      setBlocks(template.blocks)
+      setContent(template.content)
+      setInitialTitle(template.title)
+      setInitialContent(template.content)
+    } else if (documentId) {
+      // Load existing document from localStorage
+      try {
+        const storedDocuments = localStorage.getItem("documents")
+        if (storedDocuments) {
+          const documents = JSON.parse(storedDocuments)
+          const document = documents.find((doc: any) => doc.id === documentId)
+          if (document) {
+            setTitle(document.title)
+            setContent(document.content)
+            setInitialTitle(document.title)
+            setInitialContent(document.content)
+          } else {
+            setTitle("Untitled Document")
+            setContent("<p></p>")
+            setInitialTitle("Untitled Document")
+            setInitialContent("<p></p>")
+          }
+        } else {
+          setTitle("Untitled Document")
+          setContent("<p></p>")
+          setInitialTitle("Untitled Document")
+          setInitialContent("<p></p>")
+        }
+      } catch (error) {
+        console.error("Error loading document:", error)
+        setTitle("Untitled Document")
+        setContent("<p></p>")
+        setInitialTitle("Untitled Document")
+        setInitialContent("<p></p>")
+      }
+    } else {
+      setTitle("Untitled Document")
+      setContent("<p></p>")
+      setInitialTitle("Untitled Document")
+      setInitialContent("<p></p>")
     }
   }, [templateId, documentId])
+
+  // Initialize editor with content
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.innerHTML = content
+    }
+  }, [content])
+
+  // Check for active formats when selection changes
+  useEffect(() => {
+    const checkFormats = () => {
+      const newFormats: string[] = []
+
+      if (document.queryCommandState("bold")) newFormats.push("bold")
+      if (document.queryCommandState("italic")) newFormats.push("italic")
+      if (document.queryCommandState("underline")) newFormats.push("underline")
+      if (document.queryCommandState("justifyLeft")) newFormats.push("justifyLeft")
+      if (document.queryCommandState("justifyCenter")) newFormats.push("justifyCenter")
+      if (document.queryCommandState("justifyRight")) newFormats.push("justifyRight")
+      if (document.queryCommandState("insertUnorderedList")) newFormats.push("insertUnorderedList")
+      if (document.queryCommandState("insertOrderedList")) newFormats.push("insertOrderedList")
+
+      setActiveFormats(newFormats)
+    }
+
+    document.addEventListener("selectionchange", checkFormats)
+    return () => document.removeEventListener("selectionchange", checkFormats)
+  }, [])
+
+  const handleSave = () => {
+    setIsSaving(true)
+
+    // Get the current content from the editor
+    const currentContent = editorRef.current?.innerHTML || ""
+
+    // Create a new document object
+    const newDocument = {
+      id: documentId || Date.now().toString(),
+      title: title || "Untitled Document",
+      type: "doc",
+      lastModified: new Date().toLocaleString(),
+      owner: "You",
+      content: currentContent,
+    }
+
+    // Save to localStorage
+    try {
+      const storedDocuments = localStorage.getItem("documents")
+      let documents = storedDocuments ? JSON.parse(storedDocuments) : []
+
+      if (documentId) {
+        // Update existing document
+        documents = documents.map((doc: any) => (doc.id === documentId ? newDocument : doc))
+      } else {
+        // Add new document
+        documents = [newDocument, ...documents]
+      }
+
+      localStorage.setItem("documents", JSON.stringify(documents))
+
+      // Simulate saving delay
+      setTimeout(() => {
+        setIsSaving(false)
+        toast({
+          title: "Document saved",
+          description: "Your document has been saved successfully.",
+        })
+        router.push(`/documents?tab=${returnTab}`)
+      }, 1000)
+    } catch (error) {
+      console.error("Error saving document:", error)
+      setIsSaving(false)
+      toast({
+        title: "Error saving document",
+        description: "There was an error saving your document. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleReset = () => {
+    setIsResetting(true)
+
+    // Reset title and content to initial values
+    setTitle(initialTitle)
+    setContent(initialContent)
+
+    // Update the editor content
+    if (editorRef.current) {
+      editorRef.current.innerHTML = initialContent
+    }
+
+    toast({
+      title: "Document reset",
+      description: "Your document has been reset to its initial state.",
+    })
+
+    setIsResetting(false)
+  }
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value)
   }
 
-  const handleBlockChange = (id: string, content: string) => {
-    setBlocks(
-      blocks.map((block) => {
-        if (block.id === id) {
-          return { ...block, content }
-        }
-        return block
-      }),
-    )
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent, blockId: string) => {
-    const blockIndex = blocks.findIndex((block) => block.id === blockId)
-
-    // Enter key creates a new block
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      const newBlock = { id: Date.now().toString(), type: "paragraph", content: "" }
-      const updatedBlocks = [...blocks]
-      updatedBlocks.splice(blockIndex + 1, 0, newBlock)
-      setBlocks(updatedBlocks)
-      setSelectedBlockId(newBlock.id)
+  const formatText = (command: string, value = "") => {
+    // Focus the editor if it's not already focused
+    if (document.activeElement !== editorRef.current) {
+      editorRef.current?.focus()
     }
 
-    // Backspace on empty block deletes it
-    if (e.key === "Backspace" && blocks[blockIndex].content === "" && blocks.length > 1) {
-      e.preventDefault()
-      const updatedBlocks = blocks.filter((_, index) => index !== blockIndex)
-      setBlocks(updatedBlocks)
-      setSelectedBlockId(blocks[blockIndex - 1]?.id || blocks[blockIndex + 1]?.id)
-    }
-  }
-
-  const addBlock = (type: BlockType) => {
-    const blockIndex = blocks.findIndex((block) => block.id === selectedBlockId)
-    const newBlock = { id: Date.now().toString(), type, content: "" }
-    const updatedBlocks = [...blocks]
-    updatedBlocks.splice(blockIndex + 1, 0, newBlock)
-    setBlocks(updatedBlocks)
-    setSelectedBlockId(newBlock.id)
-  }
-
-  // Update the formatBlock function to track active formats
-  const formatBlock = (command: string, value = "") => {
+    // Execute the command
     document.execCommand(command, false, value)
 
     // Update active formats
@@ -117,62 +221,235 @@ export default function DocumentEditor() {
     }
 
     setActiveFormats(newFormats)
+  }
 
-    // Focus back on the editor
-    if (editorRef.current) {
-      const blockElement = editorRef.current.querySelector(`[data-block-id="${selectedBlockId}"]`)
-      if (blockElement) {
-        const selection = window.getSelection()
-        if (selection && selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0)
-          if (blockElement.contains(range.commonAncestorContainer)) {
-            // If the selection is within the block, preserve it
-            // Otherwise, focus on the block
-            blockElement.focus()
-          }
-        } else {
-          blockElement.focus()
-        }
+  const insertTable = () => {
+    // Focus the editor if it's not already focused
+    if (document.activeElement !== editorRef.current) {
+      editorRef.current?.focus()
+    }
+
+    const html = `
+      <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+        <thead>
+          <tr style="background-color: #f3f4f6;">
+            <th style="border: 1px solid #d1d5db; padding: 8px 12px; text-align: left; height: 40px;">Header 1</th>
+            <th style="border: 1px solid #d1d5db; padding: 8px 12px; text-align: left; height: 40px;">Header 2</th>
+            <th style="border: 1px solid #d1d5db; padding: 8px 12px; text-align: left; height: 40px;">Header 3</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="border: 1px solid #d1d5db; padding: 8px 12px; height: 40px;"></td>
+            <td style="border: 1px solid #d1d5db; padding: 8px 12px; height: 40px;"></td>
+            <td style="border: 1px solid #d1d5db; padding: 8px 12px; height: 40px;"></td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #d1d5db; padding: 8px 12px; height: 40px;"></td>
+            <td style="border: 1px solid #d1d5db; padding: 8px 12px; height: 40px;"></td>
+            <td style="border: 1px solid #d1d5db; padding: 8px 12px; height: 40px;"></td>
+          </tr>
+        </tbody>
+      </table>
+    `
+    document.execCommand("insertHTML", false, html)
+  }
+
+  const insertHeading = (level: number) => {
+    // Focus the editor if it's not already focused
+    if (document.activeElement !== editorRef.current) {
+      editorRef.current?.focus()
+    }
+
+    // Save the current selection
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0) return
+
+    const range = selection.getRangeAt(0)
+    const selectedText = range.toString() || `Heading ${level}`
+
+    // Create the heading element with styles
+    let headingHTML = ""
+    if (level === 1) {
+      headingHTML = `<h1 style="font-size: 28px; margin-top: 24px; margin-bottom: 16px; color: #333; font-weight: bold;">${selectedText}</h1>`
+    } else {
+      headingHTML = `<h2 style="font-size: 22px; margin-top: 20px; margin-bottom: 12px; color: #444; font-weight: bold;">${selectedText}</h2>`
+    }
+
+    // Insert the heading
+    document.execCommand("insertHTML", false, headingHTML)
+  }
+
+  const insertBulletList = () => {
+    // Focus the editor if it's not already focused
+    if (document.activeElement !== editorRef.current) {
+      editorRef.current?.focus()
+    }
+
+    // Check if we already have a selection
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0) {
+      // If no selection, insert a new bullet list
+      const html = `
+        <ul style="margin-bottom: 16px; padding-left: 24px; list-style-type: disc;">
+          <li style="margin-bottom: 8px;">List item 1</li>
+          <li style="margin-bottom: 8px;">List item 2</li>
+          <li style="margin-bottom: 8px;">List item 3</li>
+        </ul>
+      `
+      document.execCommand("insertHTML", false, html)
+    } else {
+      // If there's a selection, try to use the built-in command first
+      document.execCommand("insertUnorderedList", false)
+
+      // Then apply our styling to the newly created list
+      const lists = editorRef.current?.querySelectorAll("ul")
+      if (lists && lists.length > 0) {
+        const lastList = lists[lists.length - 1]
+        lastList.style.marginBottom = "16px"
+        lastList.style.paddingLeft = "24px"
+        lastList.style.listStyleType = "disc"
+
+        const items = lastList.querySelectorAll("li")
+        items.forEach((item) => {
+          item.style.marginBottom = "8px"
+        })
+      }
+    }
+  }
+
+  const insertNumberedList = () => {
+    // Focus the editor if it's not already focused
+    if (document.activeElement !== editorRef.current) {
+      editorRef.current?.focus()
+    }
+
+    // Check if we already have a selection
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0) {
+      // If no selection, insert a new numbered list
+      const html = `
+        <ol style="margin-bottom: 16px; padding-left: 24px; list-style-type: decimal;">
+          <li style="margin-bottom: 8px;">List item 1</li>
+          <li style="margin-bottom: 8px;">List item 2</li>
+          <li style="margin-bottom: 8px;">List item 3</li>
+        </ol>
+      `
+      document.execCommand("insertHTML", false, html)
+    } else {
+      // If there's a selection, try to use the built-in command first
+      document.execCommand("insertOrderedList", false)
+
+      // Then apply our styling to the newly created list
+      const lists = editorRef.current?.querySelectorAll("ol")
+      if (lists && lists.length > 0) {
+        const lastList = lists[lists.length - 1]
+        lastList.style.marginBottom = "16px"
+        lastList.style.paddingLeft = "24px"
+        lastList.style.listStyleType = "decimal"
+
+        const items = lastList.querySelectorAll("li")
+        items.forEach((item) => {
+          item.style.marginBottom = "8px"
+        })
+      }
+    }
+  }
+
+  const insertImage = () => {
+    // Focus the editor if it's not already focused
+    if (document.activeElement !== editorRef.current) {
+      editorRef.current?.focus()
+    }
+
+    const url = prompt("Enter image URL:", "https://")
+    if (url) {
+      const html = `<img src="${url}" alt="Image" style="max-width: 100%; height: auto; margin: 16px 0; display: block;" />`
+      document.execCommand("insertHTML", false, html)
+    }
+  }
+
+  const handleFontSizeChange = (value: string) => {
+    setFontSize(value)
+
+    // Focus the editor if it's not already focused
+    if (document.activeElement !== editorRef.current) {
+      editorRef.current?.focus()
+    }
+
+    // Get the current selection
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0) return
+
+    // If there's a selection, wrap it in a span with the font size
+    const range = selection.getRangeAt(0)
+    if (!range.collapsed) {
+      // There is selected text, apply font size to selection
+      const span = document.createElement("span")
+      span.style.fontSize = value
+
+      // Apply the span to the selected content
+      const selectedContent = range.extractContents()
+      span.appendChild(selectedContent)
+      range.insertNode(span)
+    } else {
+      // No selection, just set the default font size for the editor
+      if (editorRef.current) {
+        editorRef.current.style.fontSize = value
       }
     }
   }
 
   return (
-    <div className="container mx-auto flex min-h-screen flex-col p-6">
+    <div className="container mx-auto p-6">
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" asChild>
-            <Link href="/documents">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
+          <Button variant="outline" size="icon" onClick={() => router.push(`/documents?tab=${returnTab}`)}>
+            <ChevronLeft className="h-4 w-4" />
           </Button>
           <Input
+            type="text"
             value={title}
             onChange={handleTitleChange}
-            placeholder="Untitled Document"
-            className="max-w-md border-none text-xl font-bold focus-visible:ring-0"
+            className="text-xl font-bold border-none shadow-none focus-visible:ring-0 w-[300px] md:w-[500px]"
+            placeholder="Document Title"
           />
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <Save className="mr-2 h-4 w-4" /> Save
-          </Button>
-          <Button variant="outline" size="icon">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </div>
+        <Button onClick={handleSave} disabled={isSaving}>
+          {isSaving ? "Saving..." : "Save"} <Save className="ml-2 h-4 w-4" />
+        </Button>
       </div>
 
-      <Card className="flex-1 p-0">
-        <TooltipProvider>
-          <div className="border-b p-2">
-            <div className="flex flex-wrap items-center gap-1">
+      <TooltipProvider>
+        <div className="mb-4 border rounded-md p-2">
+          <div className="flex flex-wrap gap-1">
+            {/* Font size selector */}
+            <div className="flex items-center mr-2">
+              <Select value={fontSize} onValueChange={handleFontSizeChange}>
+                <SelectTrigger className="w-[100px] h-8">
+                  <SelectValue placeholder="Font Size" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="75%">75%</SelectItem>
+                  <SelectItem value="90%">90%</SelectItem>
+                  <SelectItem value="100%">100%</SelectItem>
+                  <SelectItem value="125%">125%</SelectItem>
+                  <SelectItem value="150%">150%</SelectItem>
+                  <SelectItem value="200%">200%</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Separator orientation="vertical" className="h-8" />
+
+            {/* Text formatting */}
+            <div className="flex items-center gap-1">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => formatBlock("bold")}
+                    onClick={() => formatText("bold")}
                     className={activeFormats.includes("bold") ? "bg-accent" : ""}
                   >
                     <Bold className="h-4 w-4" />
@@ -186,7 +463,7 @@ export default function DocumentEditor() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => formatBlock("italic")}
+                    onClick={() => formatText("italic")}
                     className={activeFormats.includes("italic") ? "bg-accent" : ""}
                   >
                     <Italic className="h-4 w-4" />
@@ -200,7 +477,7 @@ export default function DocumentEditor() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => formatBlock("underline")}
+                    onClick={() => formatText("underline")}
                     className={activeFormats.includes("underline") ? "bg-accent" : ""}
                   >
                     <Underline className="h-4 w-4" />
@@ -208,15 +485,18 @@ export default function DocumentEditor() {
                 </TooltipTrigger>
                 <TooltipContent>Underline</TooltipContent>
               </Tooltip>
+            </div>
 
-              <div className="mx-1 h-4 w-px bg-border" />
+            <Separator orientation="vertical" className="h-8" />
 
+            {/* Alignment */}
+            <div className="flex items-center gap-1">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => formatBlock("justifyLeft")}
+                    onClick={() => formatText("justifyLeft")}
                     className={activeFormats.includes("justifyLeft") ? "bg-accent" : ""}
                   >
                     <AlignLeft className="h-4 w-4" />
@@ -230,7 +510,7 @@ export default function DocumentEditor() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => formatBlock("justifyCenter")}
+                    onClick={() => formatText("justifyCenter")}
                     className={activeFormats.includes("justifyCenter") ? "bg-accent" : ""}
                   >
                     <AlignCenter className="h-4 w-4" />
@@ -244,7 +524,7 @@ export default function DocumentEditor() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => formatBlock("justifyRight")}
+                    onClick={() => formatText("justifyRight")}
                     className={activeFormats.includes("justifyRight") ? "bg-accent" : ""}
                   >
                     <AlignRight className="h-4 w-4" />
@@ -252,15 +532,18 @@ export default function DocumentEditor() {
                 </TooltipTrigger>
                 <TooltipContent>Align Right</TooltipContent>
               </Tooltip>
+            </div>
 
-              <div className="mx-1 h-4 w-px bg-border" />
+            <Separator orientation="vertical" className="h-8" />
 
+            {/* Lists */}
+            <div className="flex items-center gap-1">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => formatBlock("insertUnorderedList")}
+                    onClick={insertBulletList}
                     className={activeFormats.includes("insertUnorderedList") ? "bg-accent" : ""}
                   >
                     <List className="h-4 w-4" />
@@ -274,7 +557,7 @@ export default function DocumentEditor() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => formatBlock("insertOrderedList")}
+                    onClick={insertNumberedList}
                     className={activeFormats.includes("insertOrderedList") ? "bg-accent" : ""}
                   >
                     <ListOrdered className="h-4 w-4" />
@@ -282,23 +565,53 @@ export default function DocumentEditor() {
                 </TooltipTrigger>
                 <TooltipContent>Numbered List</TooltipContent>
               </Tooltip>
+            </div>
+
+            <Separator orientation="vertical" className="h-8" />
+
+            {/* Insert elements */}
+            <div className="flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm" onClick={() => insertHeading(1)}>
+                    <Heading1 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Heading 1</TooltipContent>
+              </Tooltip>
 
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => formatBlock("insertCheckbox")}
-                    className={activeFormats.includes("insertCheckbox") ? "bg-accent" : ""}
-                  >
-                    <CheckSquare className="h-4 w-4" />
+                  <Button variant="ghost" size="sm" onClick={() => insertHeading(2)}>
+                    <Heading2 className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Checkbox</TooltipContent>
+                <TooltipContent>Heading 2</TooltipContent>
               </Tooltip>
 
-              <div className="mx-1 h-4 w-px bg-border" />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm" onClick={insertTable}>
+                    <Table className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Insert Table</TooltipContent>
+              </Tooltip>
 
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm" onClick={insertImage}>
+                    <ImageIcon className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Insert Image</TooltipContent>
+              </Tooltip>
+            </div>
+
+            <Separator orientation="vertical" className="h-8" />
+
+            {/* Links */}
+            <div className="flex items-center gap-1">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -306,7 +619,7 @@ export default function DocumentEditor() {
                     size="sm"
                     onClick={() => {
                       const url = prompt("Enter URL:")
-                      if (url) formatBlock("createLink", url)
+                      if (url) formatText("createLink", url)
                     }}
                   >
                     <Link2 className="h-4 w-4" />
@@ -314,414 +627,42 @@ export default function DocumentEditor() {
                 </TooltipTrigger>
                 <TooltipContent>Insert Link</TooltipContent>
               </Tooltip>
-
-              <div className="mx-1 h-4 w-px bg-border" />
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="gap-1">
-                        Add Block <ChevronDown className="h-3 w-3" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-56">
-                      {blockTypes.map((blockType) => (
-                        <DropdownMenuItem key={blockType.type} onClick={() => addBlock(blockType.type)}>
-                          <blockType.icon className="mr-2 h-4 w-4" />
-                          {blockType.label}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TooltipTrigger>
-                <TooltipContent>Add Block</TooltipContent>
-              </Tooltip>
             </div>
           </div>
-        </TooltipProvider>
-
-        <div className="mx-auto max-w-3xl p-8" ref={editorRef}>
-          {blocks.map((block) => (
-            <EditorBlock
-              key={block.id}
-              block={block}
-              isSelected={selectedBlockId === block.id}
-              onChange={(content) => handleBlockChange(block.id, content)}
-              onSelect={() => setSelectedBlockId(block.id)}
-              onKeyDown={(e) => handleKeyDown(e, block.id)}
-              formatBlock={formatBlock}
-            />
-          ))}
         </div>
-      </Card>
+      </TooltipProvider>
+
+      <div
+        className="rounded-md border p-6 min-h-[60vh] focus:outline-none"
+        ref={editorRef}
+        contentEditable
+        suppressContentEditableWarning
+        onInput={(e) => {
+          // We don't need to update state on every input as we'll get the content when saving
+          // This prevents cursor position issues
+        }}
+        style={{ fontSize }}
+      />
+
+      {/* Reset button at the bottom */}
+      <div className="mt-6 flex justify-center">
+        <Button
+          variant="outline"
+          onClick={() => setShowResetConfirmation(true)}
+          disabled={isResetting}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Reset to Original Template
+        </Button>
+      </div>
+
+      {/* Reset confirmation dialog */}
+      <ResetConfirmationDialog
+        open={showResetConfirmation}
+        onOpenChange={setShowResetConfirmation}
+        onConfirm={handleReset}
+      />
     </div>
-  )
-}
-
-type BlockType =
-  | "paragraph"
-  | "heading1"
-  | "heading2"
-  | "heading3"
-  | "bulletList"
-  | "numberedList"
-  | "todo"
-  | "image"
-  | "table"
-
-interface Block {
-  id: string
-  type: BlockType
-  content: string
-}
-
-interface EditorBlockProps {
-  block: Block
-  isSelected: boolean
-  onChange: (content: string) => void
-  onSelect: () => void
-  onKeyDown: (e: React.KeyboardEvent) => void
-  formatBlock: (command: string, value?: string) => void
-}
-
-// Replace the EditorBlock component with this improved version that properly maintains cursor position
-function EditorBlock({ block, isSelected, onChange, onSelect, onKeyDown, formatBlock }: EditorBlockProps) {
-  const blockRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (isSelected && blockRef.current) {
-      blockRef.current.focus()
-    }
-  }, [isSelected])
-
-  // This is the key improvement - we're not using dangerouslySetInnerHTML for active editing
-  // Instead, we initialize the content once and then let the contentEditable handle updates
-  useEffect(() => {
-    if (blockRef.current && !blockRef.current.textContent) {
-      blockRef.current.innerHTML = block.content
-    }
-  }, [block.id])
-
-  const handleInput = () => {
-    if (blockRef.current) {
-      onChange(blockRef.current.innerHTML)
-    }
-  }
-
-  const renderBlock = () => {
-    switch (block.type) {
-      case "heading1":
-        return (
-          <div
-            ref={blockRef}
-            contentEditable
-            suppressContentEditableWarning
-            data-block-id={block.id}
-            className="mb-4 outline-none text-3xl font-bold"
-            onInput={handleInput}
-            onKeyDown={onKeyDown}
-          />
-        )
-      case "heading2":
-        return (
-          <div
-            ref={blockRef}
-            contentEditable
-            suppressContentEditableWarning
-            data-block-id={block.id}
-            className="mb-3 outline-none text-2xl font-bold"
-            onInput={handleInput}
-            onKeyDown={onKeyDown}
-          />
-        )
-      case "heading3":
-        return (
-          <div
-            ref={blockRef}
-            contentEditable
-            suppressContentEditableWarning
-            data-block-id={block.id}
-            className="mb-2 outline-none text-xl font-bold"
-            onInput={handleInput}
-            onKeyDown={onKeyDown}
-          />
-        )
-      case "bulletList":
-        return (
-          <div className="flex">
-            <div className="mr-2 mt-1.5">•</div>
-            <div
-              ref={blockRef}
-              contentEditable
-              suppressContentEditableWarning
-              data-block-id={block.id}
-              className="flex-1 outline-none"
-              onInput={handleInput}
-              onKeyDown={onKeyDown}
-            />
-          </div>
-        )
-      case "numberedList":
-        return (
-          <div className="flex">
-            <div className="mr-2 mt-1.5">1.</div>
-            <div
-              ref={blockRef}
-              contentEditable
-              suppressContentEditableWarning
-              data-block-id={block.id}
-              className="flex-1 outline-none"
-              onInput={handleInput}
-              onKeyDown={onKeyDown}
-            />
-          </div>
-        )
-      case "todo":
-        return (
-          <div className="flex items-start">
-            <input type="checkbox" className="mt-1.5 mr-2" />
-            <div
-              ref={blockRef}
-              contentEditable
-              suppressContentEditableWarning
-              data-block-id={block.id}
-              className="flex-1 outline-none"
-              onInput={handleInput}
-              onKeyDown={onKeyDown}
-            />
-          </div>
-        )
-      case "image":
-        return (
-          <div className="my-4">
-            <div className="aspect-video rounded-md bg-muted flex items-center justify-center">
-              <ImageIcon className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <div
-              ref={blockRef}
-              contentEditable
-              suppressContentEditableWarning
-              data-block-id={block.id}
-              className="mt-2 text-center text-sm text-muted-foreground outline-none"
-              onInput={handleInput}
-              onKeyDown={onKeyDown}
-            />
-          </div>
-        )
-      case "table":
-        return (
-          <div className="my-4">
-            <table className="w-full border-collapse">
-              <tbody>
-                <tr>
-                  <td className="border p-2">
-                    <div
-                      contentEditable
-                      suppressContentEditableWarning
-                      className="outline-none"
-                      onInput={handleInput}
-                    />
-                  </td>
-                  <td className="border p-2">
-                    <div contentEditable suppressContentEditableWarning className="outline-none" />
-                  </td>
-                </tr>
-                <tr>
-                  <td className="border p-2">
-                    <div contentEditable suppressContentEditableWarning className="outline-none" />
-                  </td>
-                  <td className="border p-2">
-                    <div contentEditable suppressContentEditableWarning className="outline-none" />
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        )
-      default:
-        return (
-          <div
-            ref={blockRef}
-            contentEditable
-            suppressContentEditableWarning
-            data-block-id={block.id}
-            className="mb-3 outline-none"
-            onInput={handleInput}
-            onKeyDown={onKeyDown}
-          />
-        )
-    }
-  }
-
-  return (
-    <div
-      className={`relative rounded-md p-1 transition-colors ${isSelected ? "bg-accent/30" : "hover:bg-accent/10"}`}
-      onClick={onSelect}
-    >
-      {renderBlock()}
-    </div>
-  )
-}
-
-const blockTypes = [
-  { type: "paragraph" as BlockType, label: "Text", icon: AlignLeft },
-  { type: "heading1" as BlockType, label: "Heading 1", icon: Bold },
-  { type: "heading2" as BlockType, label: "Heading 2", icon: Bold },
-  { type: "heading3" as BlockType, label: "Heading 3", icon: Bold },
-  { type: "bulletList" as BlockType, label: "Bullet List", icon: List },
-  { type: "numberedList" as BlockType, label: "Numbered List", icon: ListOrdered },
-  { type: "todo" as BlockType, label: "To-do List", icon: CheckSquare },
-  { type: "image" as BlockType, label: "Image", icon: ImageIcon },
-  { type: "table" as BlockType, label: "Table", icon: Table },
-]
-
-function getTemplateContent(templateId: string): { title: string; blocks: Block[] } {
-  switch (templateId) {
-    case "meeting-notes":
-      return {
-        title: "Meeting Notes",
-        blocks: [
-          { id: "1", type: "heading1", content: "Meeting Notes" },
-          { id: "2", type: "heading3", content: "Date: April 15, 2025" },
-          { id: "3", type: "heading3", content: "Participants:" },
-          { id: "4", type: "bulletList", content: "John Doe" },
-          { id: "5", type: "bulletList", content: "Jane Smith" },
-          { id: "6", type: "heading2", content: "Agenda" },
-          { id: "7", type: "bulletList", content: "Project updates" },
-          { id: "8", type: "bulletList", content: "Timeline review" },
-          { id: "9", type: "bulletList", content: "Action items" },
-          { id: "10", type: "heading2", content: "Discussion" },
-          { id: "11", type: "paragraph", content: "Type your notes here..." },
-          { id: "12", type: "heading2", content: "Action Items" },
-          { id: "13", type: "todo", content: "Follow up with client" },
-          { id: "14", type: "todo", content: "Update project timeline" },
-        ],
-      }
-    case "project-plan":
-      return {
-        title: "Project Plan",
-        blocks: [
-          { id: "1", type: "heading1", content: "Project Plan" },
-          { id: "2", type: "heading2", content: "Project Overview" },
-          { id: "3", type: "paragraph", content: "Describe the project here..." },
-          { id: "4", type: "heading2", content: "Goals and Objectives" },
-          { id: "5", type: "bulletList", content: "Goal 1" },
-          { id: "6", type: "bulletList", content: "Goal 2" },
-          { id: "7", type: "heading2", content: "Timeline" },
-          { id: "8", type: "table", content: "" },
-          { id: "9", type: "heading2", content: "Team Members" },
-          { id: "10", type: "bulletList", content: "Team member 1 - Role" },
-          { id: "11", type: "heading2", content: "Budget" },
-          { id: "12", type: "paragraph", content: "Budget details here..." },
-        ],
-      }
-    case "weekly-report":
-      return {
-        title: "Weekly Report",
-        blocks: [
-          { id: "1", type: "heading1", content: "Weekly Report" },
-          { id: "2", type: "heading3", content: "Week of April 15, 2025" },
-          { id: "3", type: "heading2", content: "Accomplishments" },
-          { id: "4", type: "bulletList", content: "Accomplishment 1" },
-          { id: "5", type: "bulletList", content: "Accomplishment 2" },
-          { id: "6", type: "heading2", content: "Challenges" },
-          { id: "7", type: "bulletList", content: "Challenge 1" },
-          { id: "8", type: "heading2", content: "Next Week's Goals" },
-          { id: "9", type: "todo", content: "Goal 1" },
-          { id: "10", type: "todo", content: "Goal 2" },
-          { id: "11", type: "heading2", content: "Key Metrics" },
-          { id: "12", type: "image", content: "Metrics chart" },
-        ],
-      }
-    case "team-directory":
-      return {
-        title: "Team Directory",
-        blocks: [
-          { id: "1", type: "heading1", content: "Team Directory" },
-          { id: "2", type: "heading2", content: "Leadership" },
-          { id: "3", type: "heading3", content: "John Doe - CEO" },
-          { id: "4", type: "paragraph", content: "Contact: john@example.com" },
-          { id: "5", type: "heading3", content: "Jane Smith - CTO" },
-          { id: "6", type: "paragraph", content: "Contact: jane@example.com" },
-          { id: "7", type: "heading2", content: "Engineering Team" },
-          { id: "8", type: "heading3", content: "Alex Johnson - Lead Developer" },
-          { id: "9", type: "paragraph", content: "Contact: alex@example.com" },
-          { id: "10", type: "heading2", content: "Marketing Team" },
-          { id: "11", type: "heading3", content: "Sarah Williams - Marketing Director" },
-          { id: "12", type: "paragraph", content: "Contact: sarah@example.com" },
-        ],
-      }
-    case "calendar-schedule":
-      return {
-        title: "Calendar Schedule",
-        blocks: [
-          { id: "1", type: "heading1", content: "Weekly Schedule" },
-          { id: "2", type: "heading2", content: "Monday" },
-          { id: "3", type: "paragraph", content: "9:00 AM - Team standup" },
-          { id: "4", type: "paragraph", content: "1:00 PM - Client meeting" },
-          { id: "5", type: "heading2", content: "Tuesday" },
-          { id: "6", type: "paragraph", content: "10:00 AM - Project review" },
-          { id: "7", type: "paragraph", content: "2:00 PM - Training session" },
-          { id: "8", type: "heading2", content: "Wednesday" },
-          { id: "9", type: "paragraph", content: "9:00 AM - Team standup" },
-          { id: "10", type: "paragraph", content: "11:00 AM - Planning meeting" },
-          { id: "11", type: "heading2", content: "Thursday" },
-          { id: "12", type: "paragraph", content: "9:00 AM - Team standup" },
-          { id: "13", type: "paragraph", content: "3:00 PM - Product demo" },
-          { id: "14", type: "heading2", content: "Friday" },
-          { id: "15", type: "paragraph", content: "9:00 AM - Team standup" },
-          { id: "16", type: "paragraph", content: "4:00 PM - Weekly review" },
-        ],
-      }
-    default:
-      return {
-        title: "Untitled Document",
-        blocks: [{ id: "1", type: "paragraph", content: "" }],
-      }
-  }
-}
-
-function getDocumentContent(documentId: string): { title: string; blocks: Block[] } {
-  // Mock document data for existing documents
-  const documentData: Record<string, { title: string; blocks: Block[] }> = {
-    "1": {
-      title: "Quarterly Report Draft",
-      blocks: [
-        { id: "1", type: "heading1", content: "Quarterly Report: Q2 2025" },
-        { id: "2", type: "heading2", content: "Executive Summary" },
-        {
-          id: "3",
-          type: "paragraph",
-          content:
-            "This report summarizes our performance in Q2 2025, highlighting key achievements, challenges, and recommendations for the upcoming quarter.",
-        },
-        { id: "4", type: "heading2", content: "Financial Performance" },
-        {
-          id: "5",
-          type: "paragraph",
-          content: "Revenue increased by 15% compared to the previous quarter, exceeding our target by 5%.",
-        },
-        { id: "6", type: "heading2", content: "Key Achievements" },
-        { id: "7", type: "bulletList", content: "Successfully launched Product X in 3 new markets" },
-        { id: "8", type: "bulletList", content: "Reduced operational costs by 8%" },
-        { id: "9", type: "bulletList", content: "Increased customer satisfaction score to 92%" },
-        { id: "10", type: "heading2", content: "Challenges" },
-        { id: "11", type: "bulletList", content: "Supply chain disruptions in Asia" },
-        { id: "12", type: "bulletList", content: "Increased competition in European markets" },
-        { id: "13", type: "heading2", content: "Recommendations" },
-        { id: "14", type: "todo", content: "Diversify supplier network" },
-        { id: "15", type: "todo", content: "Accelerate digital transformation initiatives" },
-        { id: "16", type: "todo", content: "Increase marketing budget for European region" },
-      ],
-    },
-    // Other document data...
-  }
-
-  return (
-    documentData[documentId] || {
-      title: "Untitled Document",
-      blocks: [{ id: "1", type: "paragraph", content: "" }],
-    }
   )
 }

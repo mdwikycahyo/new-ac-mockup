@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ArrowLeft, CalendarIcon, Clock, MapPin, Users, Edit, Trash, Check, X } from "lucide-react"
+import { ArrowLeft, CalendarIcon, Clock, MapPin, Users, Check, X } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
@@ -118,16 +118,7 @@ export default function EventDetailPage() {
               {event.category.charAt(0).toUpperCase() + event.category.slice(1)}
             </Badge>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/calendar/event/edit/${event.id}`}>
-                <Edit className="mr-2 h-4 w-4" /> Edit
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" className="text-red-500">
-              <Trash className="mr-2 h-4 w-4" /> Delete
-            </Button>
-          </div>
+          <div></div>
         </CardHeader>
         <CardContent className="p-6">
           <div className="space-y-6">
