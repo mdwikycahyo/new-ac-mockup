@@ -514,14 +514,16 @@ export default function ProjectsPage() {
           ))}
         </div>
       ) : (
-        <ProjectTimelineView
-          projects={filteredProjects}
-          weeks={weeks}
-          formatWeekRange={formatWeekRange}
-          isCurrentWeek={isCurrentWeek}
-          getMonthRange={getMonthRange}
-          formatDate={formatDate}
-        />
+        <div className="grid">
+          <ProjectTimelineView
+            projects={filteredProjects}
+            weeks={weeks}
+            formatWeekRange={formatWeekRange}
+            isCurrentWeek={isCurrentWeek}
+            getMonthRange={getMonthRange}
+            formatDate={formatDate}
+          />
+        </div>
       )}
 
       <AddProjectModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} onAddProject={handleAddProject} />
