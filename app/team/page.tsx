@@ -22,6 +22,7 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
 } from "recharts"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 export default function TeamPage() {
   // Helper function to get workload classification
@@ -242,7 +243,7 @@ export default function TeamPage() {
   const selectedMember = teamMembers.find((member) => member.id === selectedMemberId) || teamMembers[0]
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
+    <div className="flex h-screen">
       {/* Left sidebar with team members list */}
       <div className="w-80 border-r flex flex-col">
         <div className="p-4">
@@ -327,228 +328,235 @@ export default function TeamPage() {
           </div>
         </div>
 
-        <div className="p-6 grid grid-cols-1 gap-6">
-          {/* Performance Chart */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Performance</h2>
-                <Badge
-                  className="flex items-center gap-1"
-                  variant={
-                    selectedMember.performanceTrend === "Up"
-                      ? "success"
-                      : selectedMember.performanceTrend === "Down"
-                        ? "destructive"
-                        : "secondary"
-                  }
-                >
-                  {getPerformanceTrendIcon(selectedMember.performanceTrend)}
-                  {selectedMember.performanceTrend}
-                </Badge>
-              </div>
-              <p className="text-sm text-muted-foreground mb-2">Weekly task completion rate</p>
+        <div className="p-6 relative">
+          {/* Scroll indicator */}
+          <div className="absolute right-8 top-0 flex items-center gap-2 text-muted-foreground animate-pulse">
+            <span className="text-sm font-medium">Scroll for more</span>
+          </div>
 
-              <div className="h-[250px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={selectedMember.performanceData}
-                    margin={{
-                      top: 5,
-                      right: 30,
-                      left: 20,
-                      bottom: 5,
-                    }}
+          <div className="grid grid-cols-1 gap-6 overflow-x-auto pb-2">
+            {/* Performance Chart */}
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">Performance</h2>
+                  <Badge
+                    className="flex items-center gap-1"
+                    variant={
+                      selectedMember.performanceTrend === "Up"
+                        ? "success"
+                        : selectedMember.performanceTrend === "Down"
+                          ? "destructive"
+                          : "secondary"
+                    }
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="week" />
-                    <YAxis domain={[0, 6]} />
-                    <Tooltip />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="completion"
-                      name={`${selectedMember.name}`}
-                      stroke="#8884d8"
-                      activeDot={{ r: 8 }}
-                    />
-                    <Line type="monotone" dataKey="teamAvg" name="Team Average" stroke="#82ca9d" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Workload Visualization */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Workload Balance</h2>
-                <Badge variant={getWorkloadBadgeVariant(selectedMember.workloadData.utilization)}>
-                  {getWorkloadClassification(selectedMember.workloadData.utilization)}
-                </Badge>
-              </div>
-              <p className="text-sm text-muted-foreground mb-4">Current workload distribution and capacity</p>
-
-              <div className="flex flex-col items-center">
-                <div className="relative w-full max-w-md h-[100px] mb-6">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-full h-4 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${getWorkloadColor(selectedMember.workloadData.utilization)}`}
-                        style={{
-                          width: `${getWorkloadPosition(selectedMember.workloadData.utilization)}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className="absolute inset-x-0 bottom-0 flex justify-between text-xs text-muted-foreground">
-                    <span className="absolute left-0">0%</span>
-                    <span className="absolute" style={{ left: "20%" }}>
-                      30%
-                    </span>
-                    <span className="absolute" style={{ left: "46.7%" }}>
-                      70%
-                    </span>
-                    <span className="absolute" style={{ left: "66.7%" }}>
-                      100%
-                    </span>
-                    <span className="absolute right-0">150%+</span>
-                  </div>
-                  <div
-                    className="absolute bottom-8"
-                    style={{
-                      left: `${getWorkloadPosition(selectedMember.workloadData.utilization)}%`,
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                    <div className="w-3 h-3 bg-primary rounded-full" />
-                    <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-primary mx-auto" />
-                  </div>
+                    {getPerformanceTrendIcon(selectedMember.performanceTrend)}
+                    {selectedMember.performanceTrend}
+                  </Badge>
                 </div>
+                <p className="text-sm text-muted-foreground mb-2">Weekly task completion rate</p>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mb-6">
-                  <div className="p-4 bg-muted/20 rounded-lg text-center">
-                    <h3 className="font-medium mb-1">Assigned Tasks</h3>
-                    <p className="text-2xl font-bold">{selectedMember.workloadData.assignedTasks}</p>
-                  </div>
-                  <div className="p-4 bg-muted/20 rounded-lg text-center">
-                    <h3 className="font-medium mb-1">Capacity</h3>
-                    <p className="text-2xl font-bold">{selectedMember.workloadData.capacity}</p>
-                  </div>
-                  <div className="p-4 bg-muted/20 rounded-lg text-center">
-                    <h3 className="font-medium mb-1">Utilization</h3>
-                    <p className="text-2xl font-bold">{selectedMember.workloadData.utilization}%</p>
-                  </div>
-                </div>
-
-                {/* Workload impact description */}
-                <div className="w-full p-4 bg-muted/10 rounded-lg border border-muted">
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`p-2 rounded-full ${
-                        selectedMember.performanceTrend === "Down"
-                          ? "bg-red-100"
-                          : selectedMember.performanceTrend === "Up"
-                            ? "bg-green-100"
-                            : "bg-blue-100"
-                      }`}
-                    >
-                      {selectedMember.performanceTrend === "Down" ? (
-                        <AlertTriangle className="h-5 w-5 text-red-600" />
-                      ) : selectedMember.performanceTrend === "Up" ? (
-                        <TrendingUp className="h-5 w-5 text-green-600" />
-                      ) : (
-                        <Minus className="h-5 w-5 text-blue-600" />
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-sm mb-1">Workload Impact on Performance</h3>
-                      <p className="text-sm text-muted-foreground">{selectedMember.workloadData.impactDescription}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Key Strengths & Growth Areas */}
-          <Card>
-            <CardContent className="p-6">
-              <h2 className="text-xl font-semibold mb-4">Key Strengths & Growth Areas</h2>
-              <p className="text-sm text-muted-foreground mb-4">Core competencies and areas for improvements</p>
-
-              <div className="flex flex-col">
-                {/* Radar Chart - Full Width */}
-                <div className="h-[400px] w-full mb-6">
+                <div className="h-[250px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart cx="50%" cy="50%" outerRadius="70%" data={selectedMember.skillsData}>
-                      <PolarGrid />
-                      <PolarAngleAxis dataKey="skill" />
-                      <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
-                      <Radar
-                        name={selectedMember.name}
-                        dataKey="value"
-                        stroke="#8884d8"
-                        fill="#8884d8"
-                        fillOpacity={0}
-                        strokeWidth={2}
-                      />
-                      <Radar
-                        name="Industry Standard"
-                        dataKey="industry"
-                        stroke="#82ca9d"
-                        fill="#82ca9d"
-                        fillOpacity={0}
-                        strokeWidth={2}
-                      />
+                    <LineChart
+                      data={selectedMember.performanceData}
+                      margin={{
+                        top: 5,
+                        right: 30,
+                        left: 20,
+                        bottom: 5,
+                      }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="week" />
+                      <YAxis domain={[0, 6]} />
+                      <Tooltip />
                       <Legend />
-                    </RadarChart>
+                      <Line
+                        type="monotone"
+                        dataKey="completion"
+                        name={`${selectedMember.name}`}
+                        stroke="#8884d8"
+                        activeDot={{ r: 8 }}
+                      />
+                      <Line type="monotone" dataKey="teamAvg" name="Team Average" stroke="#82ca9d" />
+                    </LineChart>
                   </ResponsiveContainer>
                 </div>
+              </CardContent>
+            </Card>
 
-                {/* Who They Are Section - Below Radar Chart */}
-                <div>
-                  <h3 className="text-lg font-medium mb-3">Who They Are at Work</h3>
-                  <p className="text-sm text-muted-foreground mb-6 leading-relaxed">{selectedMember.description}</p>
+            {/* Workload Visualization */}
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">Workload Balance</h2>
+                  <Badge variant={getWorkloadBadgeVariant(selectedMember.workloadData.utilization)}>
+                    {getWorkloadClassification(selectedMember.workloadData.utilization)}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">Current workload distribution and capacity</p>
 
-                  <div className="space-y-4">
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span>Adaptability</span>
-                        <span>{selectedMember.metrics.adaptability}%</span>
+                <div className="flex flex-col items-center">
+                  <div className="relative w-full max-w-md h-[100px] mb-6">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-full h-4 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${getWorkloadColor(selectedMember.workloadData.utilization)}`}
+                          style={{
+                            width: `${getWorkloadPosition(selectedMember.workloadData.utilization)}%`,
+                          }}
+                        />
                       </div>
-                      <Progress value={selectedMember.metrics.adaptability} className="h-2" />
                     </div>
-
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span>Growth Mindset</span>
-                        <span>{selectedMember.metrics.growthMindset}%</span>
-                      </div>
-                      <Progress value={selectedMember.metrics.growthMindset} className="h-2" />
+                    <div className="absolute inset-x-0 bottom-0 flex justify-between text-xs text-muted-foreground">
+                      <span className="absolute left-0">0%</span>
+                      <span className="absolute" style={{ left: "20%" }}>
+                        30%
+                      </span>
+                      <span className="absolute" style={{ left: "46.7%" }}>
+                        70%
+                      </span>
+                      <span className="absolute" style={{ left: "66.7%" }}>
+                        100%
+                      </span>
+                      <span className="absolute right-0">150%+</span>
                     </div>
-
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span>Engagement Level</span>
-                        <span>{selectedMember.metrics.engagementLevel}%</span>
-                      </div>
-                      <Progress value={selectedMember.metrics.engagementLevel} className="h-2" />
+                    <div
+                      className="absolute bottom-8"
+                      style={{
+                        left: `${getWorkloadPosition(selectedMember.workloadData.utilization)}%`,
+                        transform: "translateX(-50%)",
+                      }}
+                    >
+                      <div className="w-3 h-3 bg-primary rounded-full" />
+                      <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-primary mx-auto" />
                     </div>
+                  </div>
 
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span>Influence Level</span>
-                        <span>{selectedMember.metrics.influenceLevel}%</span>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mb-6">
+                    <div className="p-4 bg-muted/20 rounded-lg text-center">
+                      <h3 className="font-medium mb-1">Assigned Tasks</h3>
+                      <p className="text-2xl font-bold">{selectedMember.workloadData.assignedTasks}</p>
+                    </div>
+                    <div className="p-4 bg-muted/20 rounded-lg text-center">
+                      <h3 className="font-medium mb-1">Capacity</h3>
+                      <p className="text-2xl font-bold">{selectedMember.workloadData.capacity}</p>
+                    </div>
+                    <div className="p-4 bg-muted/20 rounded-lg text-center">
+                      <h3 className="font-medium mb-1">Utilization</h3>
+                      <p className="text-2xl font-bold">{selectedMember.workloadData.utilization}%</p>
+                    </div>
+                  </div>
+
+                  {/* Workload impact description */}
+                  <div className="w-full p-4 bg-muted/10 rounded-lg border border-muted">
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={`p-2 rounded-full ${
+                          selectedMember.performanceTrend === "Down"
+                            ? "bg-red-100"
+                            : selectedMember.performanceTrend === "Up"
+                              ? "bg-green-100"
+                              : "bg-blue-100"
+                        }`}
+                      >
+                        {selectedMember.performanceTrend === "Down" ? (
+                          <AlertTriangle className="h-5 w-5 text-red-600" />
+                        ) : selectedMember.performanceTrend === "Up" ? (
+                          <TrendingUp className="h-5 w-5 text-green-600" />
+                        ) : (
+                          <Minus className="h-5 w-5 text-blue-600" />
+                        )}
                       </div>
-                      <Progress value={selectedMember.metrics.influenceLevel} className="h-2" />
+                      <div>
+                        <h3 className="font-medium text-sm mb-1">Workload Impact on Performance</h3>
+                        <p className="text-sm text-muted-foreground">{selectedMember.workloadData.impactDescription}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            {/* Key Strengths & Growth Areas */}
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-xl font-semibold mb-4">Key Strengths & Growth Areas</h2>
+                <p className="text-sm text-muted-foreground mb-4">Core competencies and areas for improvements</p>
+
+                <div className="flex flex-col">
+                  {/* Radar Chart - Full Width */}
+                  <div className="h-[400px] w-full mb-6">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart cx="50%" cy="50%" outerRadius="70%" data={selectedMember.skillsData}>
+                        <PolarGrid />
+                        <PolarAngleAxis dataKey="skill" />
+                        <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
+                        <Radar
+                          name={selectedMember.name}
+                          dataKey="value"
+                          stroke="#8884d8"
+                          fill="#8884d8"
+                          fillOpacity={0}
+                          strokeWidth={2}
+                        />
+                        <Radar
+                          name="Industry Standard"
+                          dataKey="industry"
+                          stroke="#82ca9d"
+                          fill="#82ca9d"
+                          fillOpacity={0}
+                          strokeWidth={2}
+                        />
+                        <Legend />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  {/* Who They Are Section - Below Radar Chart */}
+                  <div>
+                    <h3 className="text-lg font-medium mb-3">Who They Are at Work</h3>
+                    <p className="text-sm text-muted-foreground mb-6 leading-relaxed">{selectedMember.description}</p>
+
+                    <div className="space-y-4">
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span>Adaptability</span>
+                          <span>{selectedMember.metrics.adaptability}%</span>
+                        </div>
+                        <Progress value={selectedMember.metrics.adaptability} className="h-2" />
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span>Growth Mindset</span>
+                          <span>{selectedMember.metrics.growthMindset}%</span>
+                        </div>
+                        <Progress value={selectedMember.metrics.growthMindset} className="h-2" />
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span>Engagement Level</span>
+                          <span>{selectedMember.metrics.engagementLevel}%</span>
+                        </div>
+                        <Progress value={selectedMember.metrics.engagementLevel} className="h-2" />
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span>Influence Level</span>
+                          <span>{selectedMember.metrics.influenceLevel}%</span>
+                        </div>
+                        <Progress value={selectedMember.metrics.influenceLevel} className="h-2" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>

@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search, FileText, FileSpreadsheet, FilePieChart, File, Eye } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
 // Document preview dialog
@@ -204,59 +203,61 @@ export function DocumentSelectorModal({ open, onClose, onSelect, savedDocuments 
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredDocuments.length > 0 ? (
-              filteredDocuments.map((doc) => {
-                const DocIcon = iconMap[doc.type as keyof typeof iconMap] || File
-                return (
-                  <Card key={doc.id} className="cursor-pointer hover:shadow-md transition-shadow">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="rounded-md bg-muted p-2">
-                            <DocIcon className="h-4 w-4" />
+          <ScrollArea className="flex-1 overflow-auto" style={{ maxHeight: "calc(80vh - 200px)" }}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-1">
+              {filteredDocuments.length > 0 ? (
+                filteredDocuments.map((doc) => {
+                  const DocIcon = iconMap[doc.type as keyof typeof iconMap] || File
+                  return (
+                    <Card key={doc.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                      {/* Card content remains the same */}
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="rounded-md bg-muted p-2">
+                              <DocIcon className="h-4 w-4" />
+                            </div>
+                            <CardTitle className="text-base truncate">{doc.title}</CardTitle>
                           </div>
-                          <CardTitle className="text-base truncate">{doc.title}</CardTitle>
                         </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pb-2">
-                      <div className="text-sm text-muted-foreground">
-                        {doc.lastModified && <div>Last modified: {doc.lastModified}</div>}
-                        {doc.owner && <div>Owner: {doc.owner}</div>}
-                      </div>
-                    </CardContent>
-                    <CardFooter className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handlePreviewDocument(doc)
-                        }}
-                      >
-                        <Eye className="h-4 w-4 mr-1" /> Preview
-                      </Button>
-                      <Button size="sm" onClick={() => handleSelectDocument(doc)}>
-                        Select
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                )
-              })
-            ) : (
-              <div className="col-span-2 text-center py-8 text-muted-foreground">
-                No documents found. Try a different search term.
-              </div>
-            )}
-          </div>
-          
+                      </CardHeader>
+                      <CardContent className="pb-2">
+                        <div className="text-sm text-muted-foreground">
+                          {doc.lastModified && <div>Last modified: {doc.lastModified}</div>}
+                          {doc.owner && <div>Owner: {doc.owner}</div>}
+                        </div>
+                      </CardContent>
+                      <CardFooter className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handlePreviewDocument(doc)
+                          }}
+                        >
+                          <Eye className="h-4 w-4 mr-1" /> Preview
+                        </Button>
+                        <Button size="sm" onClick={() => handleSelectDocument(doc)}>
+                          Select
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  )
+                })
+              ) : (
+                <div className="col-span-2 text-center py-8 text-muted-foreground">
+                  No documents found. Try a different search term.
+                </div>
+              )}
+            </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
       {/* Document Preview Dialog */}
       <PreviewDialog open={showPreview} onOpenChange={setShowPreview}>
-        <PreviewDialogContent className="sm:max-w-[800px] max-h-[80vh]">
+        <PreviewDialogContent className="sm:max-w-[80vw] max-h-[90vh] flex flex-col overflow-hidden">
           <PreviewDialogHeader>
             <PreviewDialogTitle className="flex items-center gap-2">
               {previewDocument && (
@@ -274,9 +275,12 @@ export function DocumentSelectorModal({ open, onClose, onSelect, savedDocuments 
               {previewDocument?.owner && <span> • Owner: {previewDocument.owner}</span>}
             </PreviewDialogDescription>
           </PreviewDialogHeader>
-          <ScrollArea className="h-[500px] mt-4 border rounded-md p-4">
+          <ScrollArea className="max-h-[60vh] mt-4 border rounded-md p-4 overflow-auto">
             {previewDocument?.content ? (
-              <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: previewDocument.content }}></div>
+              <div
+                className="prose max-w-none overflow-hidden"
+                dangerouslySetInnerHTML={{ __html: previewDocument.content }}
+              ></div>
             ) : (
               <div className="text-center py-8 text-muted-foreground">No preview available for this document.</div>
             )}

@@ -9,210 +9,246 @@ import { Suspense } from "react"
 
 export default function ResultsPage() {
   return (
-    <Suspense fallback={<div className="container mx-auto p-6">Loading results...</div>}>
-      <div className="container mx-auto p-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">Assessment Results</h1>
-          <p className="text-muted-foreground">Review your performance and development feedback</p>
-        </div>
-
-        <Tabs defaultValue="overview">
-          <TabsList className="mb-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="competencies">Competencies</TabsTrigger>
-            <TabsTrigger value="feedback">Detailed Feedback</TabsTrigger>
-            <TabsTrigger value="development">Development Plan</TabsTrigger>
-          </TabsList>
-          <TabsContent value="overview" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Assessment Summary</CardTitle>
-                <CardDescription>Your overall performance across all competency areas</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-8">
-                  <div className="flex flex-col items-center justify-center">
-                    <div className="relative flex h-40 w-40 items-center justify-center rounded-full border-8 border-primary/20">
-                      <div className="text-center">
-                        <div className="text-4xl font-bold">72</div>
-                        <div className="text-sm text-muted-foreground">Overall Score</div>
-                      </div>
-                      <div
-                        className="absolute inset-0 rounded-full border-8 border-primary"
-                        style={{ clipPath: "polygon(0 0, 72% 0, 72% 100%, 0 100%)" }}
-                      ></div>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <ScoreCard title="Communication" score={85} description="Excellent written and verbal skills" />
-                    <ScoreCard title="Problem Solving" score={68} description="Good analytical thinking" />
-                    <ScoreCard title="Collaboration" score={76} description="Effective team contribution" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Strengths</CardTitle>
-                  <CardDescription>Areas where you demonstrated strong performance</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    <li className="flex items-start gap-2">
-                      <ChevronUp className="mt-0.5 h-4 w-4 text-green-500" />
-                      <div>
-                        <p className="font-medium">Clear Communication</p>
-                        <p className="text-sm text-muted-foreground">
-                          You effectively conveyed complex information in emails and presentations.
-                        </p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <ChevronUp className="mt-0.5 h-4 w-4 text-green-500" />
-                      <div>
-                        <p className="font-medium">Time Management</p>
-                        <p className="text-sm text-muted-foreground">
-                          You prioritized tasks effectively and met all deadlines.
-                        </p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <ChevronUp className="mt-0.5 h-4 w-4 text-green-500" />
-                      <div>
-                        <p className="font-medium">Adaptability</p>
-                        <p className="text-sm text-muted-foreground">
-                          You adjusted well to changing requirements and unexpected challenges.
-                        </p>
-                      </div>
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Development Areas</CardTitle>
-                  <CardDescription>Areas where you can focus for improvement</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    <li className="flex items-start gap-2">
-                      <ChevronDown className="mt-0.5 h-4 w-4 text-amber-500" />
-                      <div>
-                        <p className="font-medium">Data Analysis</p>
-                        <p className="text-sm text-muted-foreground">
-                          Consider developing stronger skills in interpreting complex data sets.
-                        </p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <ChevronDown className="mt-0.5 h-4 w-4 text-amber-500" />
-                      <div>
-                        <p className="font-medium">Conflict Resolution</p>
-                        <p className="text-sm text-muted-foreground">
-                          Work on addressing disagreements more proactively in team settings.
-                        </p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <ChevronDown className="mt-0.5 h-4 w-4 text-amber-500" />
-                      <div>
-                        <p className="font-medium">Strategic Planning</p>
-                        <p className="text-sm text-muted-foreground">
-                          Focus on developing longer-term perspectives when approaching projects.
-                        </p>
-                      </div>
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="competencies" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Competency Profile</CardTitle>
-                <CardDescription>Detailed breakdown of your performance across key competency areas</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {competencies.map((competency) => (
-                    <div key={competency.name} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-medium">{competency.name}</h3>
-                        <span className="text-sm font-medium">{competency.score}/100</span>
-                      </div>
-                      <Progress value={competency.score} className="h-2" />
-                      <p className="text-sm text-muted-foreground">{competency.description}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="feedback" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Detailed Feedback</CardTitle>
-                <CardDescription>Specific observations from your assessment activities</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {feedbackItems.map((item) => (
-                    <div key={item.id} className="space-y-2 rounded-lg border p-4">
-                      <h3 className="font-medium">{item.title}</h3>
-                      <p className="text-sm text-muted-foreground">{item.description}</p>
-                      <div className="flex items-center gap-2 pt-2">
-                        <span className="text-xs font-medium text-muted-foreground">Related competency:</span>
-                        <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium">{item.competency}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="development" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Development Recommendations</CardTitle>
-                <CardDescription>Suggested actions to enhance your professional capabilities</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {developmentItems.map((item) => (
-                    <div key={item.id} className="space-y-2 rounded-lg border p-4">
-                      <h3 className="font-medium">{item.title}</h3>
-                      <p className="text-sm text-muted-foreground">{item.description}</p>
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {item.resources.map((resource, index) => (
-                          <Button key={index} variant="outline" size="sm" asChild>
-                            <a href="#" className="inline-flex items-center gap-1">
-                              {resource} <ExternalLink className="h-3 w-3" />
-                            </a>
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="flex justify-center">
-              <Button>
-                <Download className="mr-2 h-4 w-4" /> Download Full Report
-              </Button>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+    <Suspense fallback={<ResultsPageSkeleton />}>
+      <ResultsContent />
     </Suspense>
+  )
+}
+
+function ResultsContent() {
+  return (
+    <div className="container mx-auto p-6">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold tracking-tight">Assessment Results</h1>
+        <p className="text-muted-foreground">Review your performance and development feedback</p>
+      </div>
+
+      <Tabs defaultValue="overview">
+        <TabsList className="mb-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="competencies">Competencies</TabsTrigger>
+          <TabsTrigger value="feedback">Detailed Feedback</TabsTrigger>
+          <TabsTrigger value="development">Development Plan</TabsTrigger>
+        </TabsList>
+        <TabsContent value="overview" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Assessment Summary</CardTitle>
+              <CardDescription>Your overall performance across all competency areas</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-8">
+                <div className="flex flex-col items-center justify-center">
+                  <div className="relative flex h-40 w-40 items-center justify-center rounded-full border-8 border-primary/20">
+                    <div className="text-center">
+                      <div className="text-4xl font-bold">72</div>
+                      <div className="text-sm text-muted-foreground">Overall Score</div>
+                    </div>
+                    <div
+                      className="absolute inset-0 rounded-full border-8 border-primary"
+                      style={{ clipPath: "polygon(0 0, 72% 0, 72% 100%, 0 100%)" }}
+                    ></div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  <ScoreCard title="Communication" score={85} description="Excellent written and verbal skills" />
+                  <ScoreCard title="Problem Solving" score={68} description="Good analytical thinking" />
+                  <ScoreCard title="Collaboration" score={76} description="Effective team contribution" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Strengths</CardTitle>
+                <CardDescription>Areas where you demonstrated strong performance</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2">
+                    <ChevronUp className="mt-0.5 h-4 w-4 text-green-500" />
+                    <div>
+                      <p className="font-medium">Clear Communication</p>
+                      <p className="text-sm text-muted-foreground">
+                        You effectively conveyed complex information in emails and presentations.
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <ChevronUp className="mt-0.5 h-4 w-4 text-green-500" />
+                    <div>
+                      <p className="font-medium">Time Management</p>
+                      <p className="text-sm text-muted-foreground">
+                        You prioritized tasks effectively and met all deadlines.
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <ChevronUp className="mt-0.5 h-4 w-4 text-green-500" />
+                    <div>
+                      <p className="font-medium">Adaptability</p>
+                      <p className="text-sm text-muted-foreground">
+                        You adjusted well to changing requirements and unexpected challenges.
+                      </p>
+                    </div>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Development Areas</CardTitle>
+                <CardDescription>Areas where you can focus for improvement</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2">
+                    <ChevronDown className="mt-0.5 h-4 w-4 text-amber-500" />
+                    <div>
+                      <p className="font-medium">Data Analysis</p>
+                      <p className="text-sm text-muted-foreground">
+                        Consider developing stronger skills in interpreting complex data sets.
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <ChevronDown className="mt-0.5 h-4 w-4 text-amber-500" />
+                    <div>
+                      <p className="font-medium">Conflict Resolution</p>
+                      <p className="text-sm text-muted-foreground">
+                        Work on addressing disagreements more proactively in team settings.
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <ChevronDown className="mt-0.5 h-4 w-4 text-amber-500" />
+                    <div>
+                      <p className="font-medium">Strategic Planning</p>
+                      <p className="text-sm text-muted-foreground">
+                        Focus on developing longer-term perspectives when approaching projects.
+                      </p>
+                    </div>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="competencies" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Competency Profile</CardTitle>
+              <CardDescription>Detailed breakdown of your performance across key competency areas</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {competencies.map((competency) => (
+                  <div key={competency.name} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-medium">{competency.name}</h3>
+                      <span className="text-sm font-medium">{competency.score}/100</span>
+                    </div>
+                    <Progress value={competency.score} className="h-2" />
+                    <p className="text-sm text-muted-foreground">{competency.description}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="feedback" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Detailed Feedback</CardTitle>
+              <CardDescription>Specific observations from your assessment activities</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {feedbackItems.map((item) => (
+                  <div key={item.id} className="space-y-2 rounded-lg border p-4">
+                    <h3 className="font-medium">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                    <div className="flex items-center gap-2 pt-2">
+                      <span className="text-xs font-medium text-muted-foreground">Related competency:</span>
+                      <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium">{item.competency}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="development" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Development Recommendations</CardTitle>
+              <CardDescription>Suggested actions to enhance your professional capabilities</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {developmentItems.map((item) => (
+                  <div key={item.id} className="space-y-2 rounded-lg border p-4">
+                    <h3 className="font-medium">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {item.resources.map((resource, index) => (
+                        <Button key={index} variant="outline" size="sm" asChild>
+                          <a href="#" className="inline-flex items-center gap-1">
+                            {resource} <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-center">
+            <Button>
+              <Download className="mr-2 h-4 w-4" /> Download Full Report
+            </Button>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}
+
+function ResultsPageSkeleton() {
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="mb-6">
+        <div className="h-8 w-64 bg-muted rounded animate-pulse mb-2"></div>
+        <div className="h-4 w-96 bg-muted rounded animate-pulse"></div>
+      </div>
+
+      <div className="h-10 w-full max-w-md bg-muted rounded animate-pulse mb-6"></div>
+
+      <div className="space-y-6">
+        <div className="rounded-lg border p-6 space-y-4">
+          <div className="h-6 w-48 bg-muted rounded animate-pulse"></div>
+          <div className="h-40 w-40 rounded-full bg-muted animate-pulse mx-auto"></div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="rounded-lg border p-4 space-y-2">
+                <div className="h-5 w-24 bg-muted rounded animate-pulse mx-auto"></div>
+                <div className="h-8 w-12 bg-muted rounded animate-pulse mx-auto"></div>
+                <div className="h-2 bg-muted rounded animate-pulse"></div>
+                <div className="h-4 w-36 bg-muted rounded animate-pulse mx-auto"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 
