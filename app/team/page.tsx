@@ -22,7 +22,6 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
 } from "recharts"
-import { ChevronLeft, ChevronRight } from "lucide-react"
 
 export default function TeamPage() {
   // Helper function to get workload classification
@@ -316,7 +315,7 @@ export default function TeamPage() {
 
       {/* Main content area with selected member details */}
       <div className="flex-1 overflow-auto">
-        <div className="p-4 border-b flex items-center gap-4">
+        <div className="p-4 border-b flex items-center gap-4 sticky top-0 bg-background z-10 shadow-sm">
           <Avatar className="h-16 w-16">
             <AvatarFallback className="bg-primary text-primary-foreground text-xl">
               {selectedMember.name.charAt(0)}
