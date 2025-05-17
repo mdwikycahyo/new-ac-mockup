@@ -129,8 +129,7 @@ function DocumentChatbotContent() {
       setTimeout(() => {
         const botMessage: Message = {
           id: Date.now().toString(),
-          content: `Tentu! Berdasarkan dokumen Referensi Kegiatan Engagement, ada beberapa opsi yang bisa kamu pertimbangkan:<br/><br/>
-          <strong>1. Outing Outdoor Sehari Penuh</strong><br/>Kegiatan ini sangat efektif untuk membangun kekompakan tim melalui aktivitas di luar ruangan. Cocok untuk tim yang membutuhkan penyegaran dan penguatan hubungan antar anggota.<br/><br/><strong>2. Fun Games Interaktif di Kantor</strong><br/>Solusi yang lebih praktis dan hemat biaya. Bisa dilakukan dalam waktu setengah hari dan tetap memberikan dampak positif pada semangat tim.<br/><br/><strong>3. Workshop Kreativitas</strong><br/>Fokus pada pengembangan soft skill dan kreativitas tim melalui aktivitas seperti seni, musik, atau memasak bersama.<br/><br/>Pilih yang paling sesuai dengan kondisi dan kebutuhan tim kamu saat ini!`,
+          content: `Tentu! Berdasarkan dokumen Referensi Kegiatan Engagement, ada beberapa opsi yang bisa kamu pertimbangkan:<br/><br/><strong>1. Outing Outdoor Sehari Penuh</strong><br/>Kegiatan ini sangat efektif untuk membangun kekompakan tim melalui aktivitas di luar ruangan. Cocok untuk tim yang membutuhkan penyegaran dan penguatan hubungan antar anggota.<br/><br/><strong>2. Fun Games Interaktif di Kantor</strong><br/>Solusi yang lebih praktis dan hemat biaya. Bisa dilakukan dalam waktu setengah hari dan tetap memberikan dampak positif pada semangat tim.<br/><br/>Pilih yang paling sesuai dengan kondisi dan kebutuhan tim kamu saat ini!`,
           sender: "bot",
           timestamp: new Date(),
           isHtml: true,
