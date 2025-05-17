@@ -725,7 +725,7 @@ export default function ChatPage() {
           </CardContent>
         </Card>
 
-        <Card className="flex flex-col md:col-span-2 h-[calc(100vh-200px)]">
+        <Card className="flex flex-col md:col-span-2 h-[calc(75vh)]">
           <CardHeader className="border-b p-4 flex-shrink-0">
             <div className="flex items-center gap-3">
               <Avatar>

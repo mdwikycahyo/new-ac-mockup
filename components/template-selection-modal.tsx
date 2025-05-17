@@ -26,7 +26,7 @@ export function TemplateSelectionModal({ onClose }: TemplateSelectionModalProps)
   const filteredTemplates = demoMode
     ? documentTemplates.filter(
         (template) =>
-          template.id === "blank" || template.id === "draft-activity-timeline" || template.id === "project-plan",
+          template.id === "blank" || template.id === "draft-activity-timeline" || template.id === "template-rencana-kerja",
       )
     : documentTemplates
 
@@ -117,9 +117,9 @@ const documentTemplates: DocumentTemplate[] = [
     ),
   },
   {
-    id: "project-plan",
-    name: "Project Plan",
-    description: "Outline your project goals and timeline",
+    id: "template-rencana-kerja",
+    name: "Template Rencana Kerja",
+    description: "Template penyusunan rencana kerja kegiatan atau proyek.",
     icon: ListTodo,
     preview: (
       <div className="mt-4 space-y-2">

@@ -62,30 +62,49 @@ export function getTemplateContent(templateId: string): Template {
           </table>
         `,
       }
-    case "project-plan":
+    case "template-rencana-kerja":
       return {
-        title: "Project Plan",
+        title: "Template Rencana Kerja",
         content: `
-          <h1 style="font-size: 28px; margin-bottom: 16px; color: #333; font-weight: bold;">Project Plan</h1>
-          <p style="margin-bottom: 16px;">This document outlines the plan for our upcoming project.</p>
+          <h1 style="font-size: 28px; margin-bottom: 16px; color: #333; font-weight: bold;">Nama Proyek</h1>
+          <p style="margin-bottom: 16px;">Deskripsi proyek anda ...</p>
           
-          <h2 style="font-size: 22px; margin-top: 24px; margin-bottom: 12px; color: #444; font-weight: bold;">Project Overview</h2>
-          <p style="margin-bottom: 16px;">Describe the project here...</p>
-          
-          <h2 style="font-size: 22px; margin-top: 24px; margin-bottom: 12px; color: #444; font-weight: bold;">Goals and Objectives</h2>
+          <h2 style="font-size: 22px; margin-top: 24px; margin-bottom: 12px; color: #444; font-weight: bold;">Target Proyek</h2>
           <ul style="margin-bottom: 16px; padding-left: 24px; list-style-type: disc;">
-            <li style="margin-bottom: 8px;">Goal 1</li>
-            <li style="margin-bottom: 8px;">Goal 2</li>
-            <li style="margin-bottom: 8px;">Goal 3</li>
+            <li style="margin-bottom: 8px;">Target 1</li>
+            <li style="margin-bottom: 8px;">Target 2</li>
+            <li style="margin-bottom: 8px;">Target 3</li>
           </ul>
-          
-          <h2 style="font-size: 22px; margin-top: 24px; margin-bottom: 12px; color: #444; font-weight: bold;">Timeline</h2>
+                    
+          <h2 style="font-size: 22px; margin-top: 24px; margin-bottom: 12px; color: #444; font-weight: bold;">Anggota Tim</h2>
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
             <thead>
               <tr style="background-color: #f3f4f6;">
-                <th style="border: 1px solid #d1d5db; padding: 8px 12px; text-align: left; height: 40px;">Task</th>
-                <th style="border: 1px solid #d1d5db; padding: 8px 12px; text-align: left; height: 40px;">Date</th>
+                <th style="border: 1px solid #d1d5db; padding: 8px 12px; text-align: left; height: 40px;">Nama</th>
+                <th style="border: 1px solid #d1d5db; padding: 8px 12px; text-align: left; height: 40px;">Peran</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="border: 1px solid #d1d5db; padding: 8px 12px; height: 40px;"></td>
+                <td style="border: 1px solid #d1d5db; padding: 8px 12px; height: 40px;"></td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid #d1d5db; padding: 8px 12px; height: 40px;"></td>
+                <td style="border: 1px solid #d1d5db; padding: 8px 12px; height: 40px;"></td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <h2 style="font-size: 22px; margin-top: 24px; margin-bottom: 12px; color: #444; font-weight: bold;">Daftar Tugas</h2>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <thead>
+              <tr style="background-color: #f3f4f6;">
+                <th style="border: 1px solid #d1d5db; padding: 8px 12px; text-align: left; height: 40px;">Tugas</th>
                 <th style="border: 1px solid #d1d5db; padding: 8px 12px; text-align: left; height: 40px;">Status</th>
+                <th style="border: 1px solid #d1d5db; padding: 8px 12px; text-align: left; height: 40px;">Prioritas</th>
+                <th style="border: 1px solid #d1d5db; padding: 8px 12px; text-align: left; height: 40px;">Penanggung Jawab</th>
+                <th style="border: 1px solid #d1d5db; padding: 8px 12px; text-align: left; height: 40px;">Tenggat Waktu</th>
               </tr>
             </thead>
             <tbody>
@@ -93,23 +112,18 @@ export function getTemplateContent(templateId: string): Template {
                 <td style="border: 1px solid #d1d5db; padding: 8px 12px; height: 40px;"></td>
                 <td style="border: 1px solid #d1d5db; padding: 8px 12px; height: 40px;"></td>
                 <td style="border: 1px solid #d1d5db; padding: 8px 12px; height: 40px;"></td>
+                <td style="border: 1px solid #d1d5db; padding: 8px 12px; height: 40px;"></td>
+                <td style="border: 1px solid #d1d5db; padding: 8px 12px; height: 40px;"></td>
               </tr>
               <tr>
+                <td style="border: 1px solid #d1d5db; padding: 8px 12px; height: 40px;"></td>
+                <td style="border: 1px solid #d1d5db; padding: 8px 12px; height: 40px;"></td>
                 <td style="border: 1px solid #d1d5db; padding: 8px 12px; height: 40px;"></td>
                 <td style="border: 1px solid #d1d5db; padding: 8px 12px; height: 40px;"></td>
                 <td style="border: 1px solid #d1d5db; padding: 8px 12px; height: 40px;"></td>
               </tr>
             </tbody>
           </table>
-          
-          <h2 style="font-size: 22px; margin-top: 24px; margin-bottom: 12px; color: #444; font-weight: bold;">Team Members</h2>
-          <ul style="margin-bottom: 16px; padding-left: 24px; list-style-type: disc;">
-            <li style="margin-bottom: 8px;">Team member 1 - Role</li>
-            <li style="margin-bottom: 8px;">Team member 2 - Role</li>
-          </ul>
-          
-          <h2 style="font-size: 22px; margin-top: 24px; margin-bottom: 12px; color: #444; font-weight: bold;">Budget</h2>
-          <p style="margin-bottom: 16px;">Budget details here...</p>
         `,
       }
     case "blank":

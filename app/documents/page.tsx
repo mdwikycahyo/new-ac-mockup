@@ -264,6 +264,14 @@ const referenceResources: Resource[] = [
     icon: FileText,
     date: "Updated Feb 2025",
   },
+  {
+    id: 102, // Changed from 8 to 102 to avoid conflict with Project Proposal Template
+    title: "Research Database",
+    description: "Access to industry research and reports",
+    category: "Research",
+    icon: FolderOpen,
+    date: "Updated Weekly",
+  },
 ]
 
 function ResourceCard({ resource, activeTab }: { resource: Resource; activeTab: string }) {

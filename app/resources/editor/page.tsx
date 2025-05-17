@@ -598,7 +598,7 @@ function getTemplateContent(templateId: string): { title: string; blocks: Block[
           { id: "14", type: "todo", content: "Update project timeline" },
         ],
       }
-    case "project-plan":
+    case "template-rencana-kerja":
       return {
         title: "Project Plan",
         blocks: [

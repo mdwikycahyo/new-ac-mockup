@@ -17,152 +17,179 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Trash } from "lucide-react"
+import { Plus, Trash, Calendar, User, Users } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Checkbox } from "@/components/ui/checkbox"
+import { useState, useEffect } from "react"
+
+// Define types for team members and props
+interface TeamMember {
+  id: number
+  name: string
+  role: string
+  avatar?: string
+}
+
+interface ProjectData {
+  title: string
+  priority: string
+  dueDate: string
+  description: string
+  team: { id: number; name: string; role: string; avatar?: string }[]
+  targets: string[]
+  tasks: {
+    title: string
+    description?: string
+    status: string
+    priority: string
+    assignedTo?: number
+    dueDate: string
+  }[]
+}
+
+interface AddProjectModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onAddProject: (project: ProjectData) => void
+  teamMembers: TeamMember[]
+}
 
 const formSchema = z.object({
   title: z.string().min(2, {
     message: "Project title must be at least 2 characters.",
   }),
-  status: z.string({
-    required_error: "Please select a status.",
-  }),
   priority: z.string({
     required_error: "Please select a priority.",
   }),
-  startDate: z.string({
-    required_error: "Please select a start date.",
+  dueDate: z.string({
+    required_error: "Please select a due date.",
   }),
-  endDate: z.string({
-    required_error: "Please select an end date.",
+  description: z.string().min(10, {
+    message: "Description must be at least 10 characters.",
   }),
-  description: z.string().optional(),
-  estimatedHours: z.string().transform((val) => Number.parseInt(val, 10)),
-  goals: z
+  team: z.array(z.number()).min(1, {
+    message: "Please select at least one team member.",
+  }),
+  targets: z
     .array(
       z.object({
-        title: z.string().min(1, "Goal title is required"),
-        description: z.string().optional(),
+        text: z.string().min(1, "Target text is required"),
       }),
     )
-    .optional()
-    .default([]),
+    .min(1, {
+      message: "Please add at least one target.",
+    }),
   tasks: z
     .array(
       z.object({
         title: z.string().min(1, "Task title is required"),
         description: z.string().optional(),
+        status: z.string().default("To Do"),
         priority: z.string().default("Medium"),
-        dueDate: z.string().optional(),
+        assignedTo: z.number().optional(),
+        dueDate: z.string().min(1, "Due date is required"),
       }),
     )
-    .optional()
-    .default([]),
-  milestones: z
-    .array(
-      z.object({
-        title: z.string().min(1, "Milestone title is required"),
-        date: z.string().optional(),
-      }),
-    )
-    .optional()
-    .default([]),
+    .min(1, {
+      message: "Please add at least one task.",
+    }),
 })
 
-export function AddProjectModal({ isOpen, onClose, onAddProject }) {
-  const form = useForm<z.infer<typeof formSchema>>({
+type FormValues = z.infer<typeof formSchema>
+
+export function AddProjectModal({ isOpen, onClose, onAddProject, teamMembers }: AddProjectModalProps) {
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
-      status: "Planning",
       priority: "Medium",
-      startDate: "",
-      endDate: "",
+      dueDate: "",
       description: "",
-      estimatedHours: "40",
-      goals: [{ title: "", description: "" }],
-      tasks: [{ title: "", description: "", priority: "Medium", dueDate: "" }],
-      milestones: [{ title: "", date: "" }],
+      team: [],
+      targets: [{ text: "" }],
+      tasks: [
+        {
+          title: "",
+          description: "",
+          status: "To Do",
+          priority: "Medium",
+          assignedTo: undefined,
+          dueDate: "",
+        },
+      ],
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Filter out empty goals, tasks, and milestones
-    const filteredGoals = values.goals.filter((goal) => goal.title.trim() !== "")
+  // Reset form when modal closes
+  const handleClose = () => {
+    form.reset()
+    onClose()
+  }
+
+  function onSubmit(values: FormValues) {
+    // Filter out empty targets and tasks
+    const filteredTargets = values.targets.filter((target) => target.text.trim() !== "").map((target) => target.text)
+
     const filteredTasks = values.tasks.filter((task) => task.title.trim() !== "")
-    const filteredMilestones = values.milestones.filter((milestone) => milestone.title.trim() !== "")
+
+    // Get team members data
+    const selectedTeam = values.team.map((memberId) => {
+      const member = teamMembers.find((m) => m.id === memberId)
+      return {
+        id: member?.id || 0,
+        name: member?.name || "",
+        role: member?.role || "",
+        avatar: member?.avatar,
+      }
+    })
 
     // Create a new project with the form values
-    const newProject = {
+    const newProject: ProjectData = {
       title: values.title,
-      status: values.status,
       priority: values.priority,
-      progress: 0,
-      tasksCompleted: 0,
-      totalTasks: filteredTasks.length,
-      startDate: values.startDate,
-      endDate: values.endDate,
-      estimatedHours: values.estimatedHours,
+      dueDate: values.dueDate,
       description: values.description,
-      goals: filteredGoals.map((goal) => ({ ...goal, completed: false })),
-      tasks: filteredTasks.map((task, index) => ({
-        id: index + 1,
-        ...task,
-        completed: false,
-        status: "To Do",
-        dependencies: [],
-      })),
-      milestones: filteredMilestones.map((milestone, index) => ({
-        id: index + 1,
-        ...milestone,
-        completed: false,
-      })),
-      resourceAllocation: getResourceAllocation(values.priority),
-      image: "/placeholder.svg?height=300&width=400",
-      team: [],
+      team: selectedTeam,
+      targets: filteredTargets,
+      tasks: filteredTasks,
     }
 
     // Add the new project
     onAddProject(newProject)
 
-    // Close the dialog
-    onClose()
-
-    // Reset the form
-    form.reset()
+    // Close the dialog and reset state
+    handleClose()
   }
 
-  const getResourceAllocation = (priority: string) => {
-    switch (priority) {
-      case "High":
-        return 0.8
-      case "Medium":
-        return 0.5
-      case "Low":
-        return 0.3
-      default:
-        return 0.5
-    }
+  // Add a new target field
+  const addTarget = () => {
+    const currentTargets = form.getValues("targets") || []
+    form.setValue("targets", [...currentTargets, { text: "" }])
   }
 
-  // Add a new goal field
-  const addGoal = () => {
-    const currentGoals = form.getValues("goals") || []
-    form.setValue("goals", [...currentGoals, { title: "", description: "" }])
-  }
-
-  // Remove a goal field
-  const removeGoal = (index: number) => {
-    const currentGoals = form.getValues("goals") || []
+  // Remove a target field
+  const removeTarget = (index: number) => {
+    const currentTargets = form.getValues("targets") || []
     form.setValue(
-      "goals",
-      currentGoals.filter((_, i) => i !== index),
+      "targets",
+      currentTargets.filter((_, i) => i !== index),
     )
   }
 
   // Add a new task field
   const addTask = () => {
     const currentTasks = form.getValues("tasks") || []
-    form.setValue("tasks", [...currentTasks, { title: "", description: "", priority: "Medium", dueDate: "" }])
+    form.setValue("tasks", [
+      ...currentTasks,
+      {
+        title: "",
+        description: "",
+        status: "To Do",
+        priority: "Medium",
+        assignedTo: undefined,
+        dueDate: "",
+      },
+    ])
   }
 
   // Remove a task field
@@ -174,38 +201,21 @@ export function AddProjectModal({ isOpen, onClose, onAddProject }) {
     )
   }
 
-  // Add a new milestone field
-  const addMilestone = () => {
-    const currentMilestones = form.getValues("milestones") || []
-    form.setValue("milestones", [...currentMilestones, { title: "", date: "" }])
-  }
-
-  // Remove a milestone field
-  const removeMilestone = (index: number) => {
-    const currentMilestones = form.getValues("milestones") || []
-    form.setValue(
-      "milestones",
-      currentMilestones.filter((_, i) => i !== index),
-    )
-  }
-
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Project</DialogTitle>
-          <DialogDescription>
-            Fill in the details below to create a new project. You can add team members later.
-          </DialogDescription>
+          <DialogDescription>Fill in the details below to create a new project.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <Tabs defaultValue="basic" className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                <TabsTrigger value="goals">Goals</TabsTrigger>
+                <TabsTrigger value="team">Team</TabsTrigger>
+                <TabsTrigger value="targets">Targets</TabsTrigger>
                 <TabsTrigger value="tasks">Tasks</TabsTrigger>
-                <TabsTrigger value="milestones">Milestones</TabsTrigger>
               </TabsList>
 
               <TabsContent value="basic" className="space-y-4 mt-4">
@@ -224,30 +234,6 @@ export function AddProjectModal({ isOpen, onClose, onAddProject }) {
                 />
 
                 <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Planning">Planning</SelectItem>
-                            <SelectItem value="Active">Active</SelectItem>
-                            <SelectItem value="On hold">On hold</SelectItem>
-                            <SelectItem value="Completed">Completed</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
                   <FormField
                     control={form.control}
                     name="priority"
@@ -270,29 +256,13 @@ export function AddProjectModal({ isOpen, onClose, onAddProject }) {
                       </FormItem>
                     )}
                   />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="startDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Start Date</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
 
                   <FormField
                     control={form.control}
-                    name="endDate"
+                    name="dueDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>End Date</FormLabel>
+                        <FormLabel>Due Date</FormLabel>
                         <FormControl>
                           <Input type="date" {...field} />
                         </FormControl>
@@ -301,20 +271,6 @@ export function AddProjectModal({ isOpen, onClose, onAddProject }) {
                     )}
                   />
                 </div>
-
-                <FormField
-                  control={form.control}
-                  name="estimatedHours"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Estimated Hours</FormLabel>
-                      <FormControl>
-                        <Input type="number" min="1" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
                 <FormField
                   control={form.control}
@@ -335,54 +291,91 @@ export function AddProjectModal({ isOpen, onClose, onAddProject }) {
                 />
               </TabsContent>
 
-              <TabsContent value="goals" className="space-y-4 mt-4">
+              <TabsContent value="team" className="space-y-4 mt-4">
+                <FormField
+                  control={form.control}
+                  name="team"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1.5">
+                        <Users className="h-4 w-4" /> Team Members
+                      </FormLabel>
+                      <FormMessage />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                        {teamMembers.map((member) => (
+                          <label
+                            key={member.id}
+                            className={`flex items-center p-3 rounded-md border cursor-pointer transition-colors ${
+                              field.value.includes(member.id) ? "bg-primary/10 border-primary" : "hover:bg-muted"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 w-full">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value.includes(member.id)}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      field.onChange([...field.value, member.id]);
+                                    } else {
+                                      field.onChange(field.value.filter((id) => id !== member.id));
+                                    }
+                                  }}
+                                />
+                              </FormControl>
+                              <Avatar className="h-9 w-9 ml-2 mr-3">
+                                <AvatarImage src={member.avatar || "/placeholder.svg"} alt={member.name} />
+                                <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="font-medium">{member.name}</div>
+                                <div className="text-xs text-muted-foreground">{member.role}</div>
+                              </div>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                      {field.value.length === 0 && (
+                        <p className="text-sm text-destructive mt-2">Please select at least one team member</p>
+                      )}
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+
+              <TabsContent value="targets" className="space-y-4 mt-4">
                 <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-lg font-medium">Project Goals</h3>
-                  <Button type="button" variant="outline" size="sm" onClick={addGoal}>
-                    <Plus className="h-4 w-4 mr-1" /> Add Goal
+                  <h3 className="text-lg font-medium">Project Targets</h3>
+                  <Button type="button" variant="outline" size="sm" onClick={addTarget}>
+                    <Plus className="h-4 w-4 mr-1" /> Add Target
                   </Button>
                 </div>
 
-                {form.watch("goals")?.map((_, index) => (
-                  <Card key={index} className="border">
+                {form.watch("targets")?.map((target, index) => (
+                  <Card key={`target-${target.text}-${index}`} className="border">
                     <CardHeader className="py-3 px-4">
                       <div className="flex justify-between items-center">
-                        <CardTitle className="text-sm">Goal {index + 1}</CardTitle>
+                        <CardTitle className="text-sm">Target {index + 1}</CardTitle>
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
-                          onClick={() => removeGoal(index)}
+                          onClick={() => removeTarget(index)}
                           className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          disabled={form.watch("goals").length <= 1}
+                          disabled={form.watch("targets").length <= 1}
                         >
                           <Trash className="h-4 w-4" />
                         </Button>
                       </div>
                     </CardHeader>
-                    <CardContent className="py-3 px-4 space-y-3">
+                    <CardContent className="py-3 px-4">
                       <FormField
                         control={form.control}
-                        name={`goals.${index}.title`}
+                        name={`targets.${index}.text`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Goal Title</FormLabel>
+                            <FormLabel>Target Description</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter goal title" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name={`goals.${index}.description`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Description</FormLabel>
-                            <FormControl>
-                              <Textarea placeholder="Enter goal description" className="resize-none" {...field} />
+                              <Input placeholder="E.g., Increase user engagement by 30%" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -401,8 +394,8 @@ export function AddProjectModal({ isOpen, onClose, onAddProject }) {
                   </Button>
                 </div>
 
-                {form.watch("tasks")?.map((_, index) => (
-                  <Card key={index} className="border">
+                {form.watch("tasks")?.map((task, index) => (
+                  <Card key={`task-${task.title}-${index}`} className="border">
                     <CardHeader className="py-3 px-4">
                       <div className="flex justify-between items-center">
                         <CardTitle className="text-sm">Task {index + 1}</CardTitle>
@@ -436,6 +429,29 @@ export function AddProjectModal({ isOpen, onClose, onAddProject }) {
                       <div className="grid grid-cols-2 gap-4">
                         <FormField
                           control={form.control}
+                          name={`tasks.${index}.status`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Status</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select status" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="To Do">To Do</SelectItem>
+                                  <SelectItem value="In Progress">In Progress</SelectItem>
+                                  <SelectItem value="Done">Done</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
                           name={`tasks.${index}.priority`}
                           render={({ field }) => (
                             <FormItem>
@@ -456,13 +472,63 @@ export function AddProjectModal({ isOpen, onClose, onAddProject }) {
                             </FormItem>
                           )}
                         />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name={`tasks.${index}.assignedTo`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="flex items-center">
+                                <User className="h-3.5 w-3.5 mr-1" /> Assigned To
+                              </FormLabel>
+                              <Select
+                                onValueChange={(value) => {
+                                  if (value === "no-selection") {
+                                    field.onChange(undefined)
+                                  } else {
+                                    field.onChange(Number.parseInt(value))
+                                  }
+                                }}
+                                value={field.value?.toString() || "no-selection"}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select team member" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {form.watch("team").length > 0 ? (
+                                    form.watch("team").map((memberId) => {
+                                      const member = teamMembers.find((m) => m.id === memberId)
+                                      if (!member) return null;
+                                      return (
+                                        <SelectItem key={member.id} value={member.id.toString()}>
+                                          {member.name}
+                                        </SelectItem>
+                                      )
+                                    })
+                                  ) : (
+                                    <SelectItem value="no-selection" disabled>
+                                      Please select team members first
+                                    </SelectItem>
+                                  )}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
                         <FormField
                           control={form.control}
                           name={`tasks.${index}.dueDate`}
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Due Date</FormLabel>
+                              <FormLabel className="flex items-center">
+                                <Calendar className="h-3.5 w-3.5 mr-1" /> Due Date
+                              </FormLabel>
                               <FormControl>
                                 <Input type="date" {...field} />
                               </FormControl>
@@ -471,78 +537,6 @@ export function AddProjectModal({ isOpen, onClose, onAddProject }) {
                           )}
                         />
                       </div>
-
-                      <FormField
-                        control={form.control}
-                        name={`tasks.${index}.description`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Description</FormLabel>
-                            <FormControl>
-                              <Textarea placeholder="Enter task description" className="resize-none" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </CardContent>
-                  </Card>
-                ))}
-              </TabsContent>
-
-              <TabsContent value="milestones" className="space-y-4 mt-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-lg font-medium">Project Milestones</h3>
-                  <Button type="button" variant="outline" size="sm" onClick={addMilestone}>
-                    <Plus className="h-4 w-4 mr-1" /> Add Milestone
-                  </Button>
-                </div>
-
-                {form.watch("milestones")?.map((_, index) => (
-                  <Card key={index} className="border">
-                    <CardHeader className="py-3 px-4">
-                      <div className="flex justify-between items-center">
-                        <CardTitle className="text-sm">Milestone {index + 1}</CardTitle>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeMilestone(index)}
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          disabled={form.watch("milestones").length <= 1}
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="py-3 px-4 space-y-3">
-                      <FormField
-                        control={form.control}
-                        name={`milestones.${index}.title`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Milestone Title</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter milestone title" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name={`milestones.${index}.date`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Target Date</FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                     </CardContent>
                   </Card>
                 ))}
@@ -550,7 +544,7 @@ export function AddProjectModal({ isOpen, onClose, onAddProject }) {
             </Tabs>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose} className="mr-2">
+              <Button type="button" variant="outline" onClick={handleClose} className="mr-2">
                 Cancel
               </Button>
               <Button type="submit">Create Project</Button>
