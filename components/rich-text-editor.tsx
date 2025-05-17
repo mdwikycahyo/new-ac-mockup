@@ -24,6 +24,7 @@ import { DocumentSelectorModal } from "@/components/document-selector-modal"
 
 interface RichTextEditorProps {
   initialContent?: string
+  value?: string
   onChange?: (content: string) => void
   placeholder?: string
   minHeight?: string
@@ -32,6 +33,7 @@ interface RichTextEditorProps {
 
 export function RichTextEditor({
   initialContent = "",
+  value,
   onChange,
   placeholder = "Start typing...",
   minHeight = "200px",
@@ -121,6 +123,16 @@ export function RichTextEditor({
       setIsInitialized(true)
     }
   }, [initialContent, placeholder, readOnly, isInitialized])
+
+  // Update editor content when value prop changes
+  useEffect(() => {
+    if (editorRef.current && value !== undefined && value !== null) {
+      // Only update if the content is different to avoid cursor jumping
+      if (editorRef.current.innerHTML !== value) {
+        editorRef.current.innerHTML = value
+      }
+    }
+  }, [value])
 
   // Handle content changes
   const handleContentChange = () => {

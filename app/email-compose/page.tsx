@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ArrowLeft, Paperclip, Send, X, Save, Users, CheckCircle, Check } from "lucide-react"
+import { ArrowLeft, Paperclip, Send, X, Save, Users, CheckCircle, Check, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -20,14 +20,18 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Progress } from "@/components/ui/progress"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { RichTextEditor } from "@/components/rich-text-editor"
 import { useDemoMode } from "@/components/context/demo-mode-context"
+import { useEmail } from "@/components/context/email-context"
 
 export default function ComposeEmailPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const draftId = searchParams.get("draft")
   const { setAssessmentCompleted } = useDemoMode()
+  const { addSentEmail, saveDraft, updateDraft, deleteDraft, getDraft } = useEmail()
   const [recipients, setRecipients] = useState<string[]>([])
   const [subject, setSubject] = useState("")
   const [content, setContent] = useState("")
@@ -35,11 +39,22 @@ export default function ComposeEmailPage() {
   const [showContactPicker, setShowContactPicker] = useState(false)
   const [showDocumentSelector, setShowDocumentSelector] = useState(false)
   const [attachedDocuments, setAttachedDocuments] = useState<
-    Array<{ id: number | string; title: string; type: string; content?: string }>
+    Array<{ id: number | string; title: string; type: string; content?: string; size?: string }>
   >([])
   const [savedDocuments, setSavedDocuments] = useState<any[]>([])
   const [showCompletionDialog, setShowCompletionDialog] = useState(false)
   const [progress, setProgress] = useState(0)
+  const [currentDraftId, setCurrentDraftId] = useState<string | null>(null)
+
+  // Warning dialog state
+  const [showWarningDialog, setShowWarningDialog] = useState(false)
+  const [warningMessage, setWarningMessage] = useState("")
+
+  // Show warning dialog
+  const showWarning = (message: string) => {
+    setWarningMessage(message)
+    setShowWarningDialog(true)
+  }
 
   // Load saved documents from localStorage
   useEffect(() => {
@@ -48,6 +63,30 @@ export default function ComposeEmailPage() {
       setSavedDocuments(docs)
     }
   }, [])
+
+  // Load draft if draftId is provided
+  useEffect(() => {
+    if (draftId) {
+      const draft = getDraft(draftId)
+      if (draft && draft.type === "new") {
+        setRecipients(draft.recipients || [])
+        setSubject(draft.subject || "")
+        setContent(draft.content || "")
+        setCurrentDraftId(draftId)
+
+        if (draft.attachments) {
+          setAttachedDocuments(
+            draft.attachments.map((attachment) => ({
+              id: attachment.id,
+              title: attachment.name,
+              type: attachment.type,
+              size: attachment.size,
+            })),
+          )
+        }
+      }
+    }
+  }, [draftId, getDraft])
 
   // Animation for progress bar
   useEffect(() => {
@@ -84,13 +123,44 @@ export default function ComposeEmailPage() {
   const handleSend = () => {
     // Validate required fields
     if (recipients.length === 0) {
-      alert("Please add at least one recipient")
+      showWarning("Please add at least one recipient")
       return
     }
 
     if (!subject) {
-      alert("Please add a subject")
+      showWarning("Please add a subject")
       return
+    }
+
+    // Create a new sent email
+    const newSentEmail = {
+      id: `sent-${Date.now()}`,
+      sender: "You",
+      senderEmail: "you@example.com",
+      recipients: recipients,
+      subject: subject,
+      preview: content.replace(/<[^>]*>/g, "").substring(0, 100),
+      content: content,
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
+      read: true,
+      attachments:
+        attachedDocuments.length > 0
+          ? attachedDocuments.map((doc) => ({
+              id: typeof doc.id === "number" ? doc.id : Number.parseInt(doc.id.toString()),
+              name: doc.title,
+              size: doc.size || "1.0 MB", // Placeholder size
+              type: doc.type,
+            }))
+          : undefined,
+    }
+
+    // Add to sent emails
+    addSentEmail(newSentEmail)
+
+    // Delete draft if it exists
+    if (currentDraftId) {
+      deleteDraft(currentDraftId)
     }
 
     // Show completion dialog
@@ -98,10 +168,39 @@ export default function ComposeEmailPage() {
   }
 
   const handleSaveAsDraft = () => {
-    // In a real app, this would save the email as a draft
-    alert("Email saved as draft!")
-    // Then redirect to inbox
-    router.push("/email")
+    // Don't save if there's nothing to save
+    if (!recipients.length && !subject && !content && !attachedDocuments.length) {
+      showWarning("Nothing to save as draft")
+      return
+    }
+
+    const draftData = {
+      type: "new" as const,
+      recipients,
+      subject,
+      content,
+      attachments:
+        attachedDocuments.length > 0
+          ? attachedDocuments.map((doc) => ({
+              id: doc.id,
+              name: doc.title,
+              size: doc.size || "1.0 MB", // Placeholder size
+              type: doc.type,
+            }))
+          : undefined,
+    }
+
+    if (currentDraftId) {
+      // Update existing draft
+      updateDraft(currentDraftId, draftData)
+    } else {
+      // Create new draft
+      const newDraftId = saveDraft(draftData)
+      setCurrentDraftId(newDraftId)
+    }
+
+    // Redirect to drafts tab
+    router.push("/email?tab=drafts")
   }
 
   const isContactSelected = (email: string) => {
@@ -320,6 +419,26 @@ export default function ComposeEmailPage() {
           savedDocuments={savedDocuments}
         />
       )}
+
+      {/* Warning Dialog */}
+      <Dialog open={showWarningDialog} onOpenChange={setShowWarningDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600">
+              <AlertCircle className="h-5 w-5" />
+              Warning
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p>{warningMessage}</p>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowWarningDialog(false)} className="w-full">
+              OK
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Assessment Completion Dialog */}
       <Dialog open={showCompletionDialog} onOpenChange={setShowCompletionDialog}>

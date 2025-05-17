@@ -8,6 +8,7 @@ import { DemoScenarioManager } from "@/components/demo-scenario-manager"
 import { DocumentChatbot } from "@/components/document-chatbot"
 import { DocumentProvider } from "@/components/context/document-context"
 import { DebugLocalStorage } from "@/components/debug-local-storage"
+import { EmailProvider } from "@/components/context/email-context"
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -21,12 +22,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <DemoModeProvider>
             <NotificationProvider>
               <DocumentProvider>
-                <div className="flex min-h-screen">
-                  <Sidebar />
-                  <main className="flex-1 bg-background">{children}</main>
-                  <DemoScenarioManager />
-                  <DocumentChatbot />
-                </div>
+                <EmailProvider>
+                  <div className="flex min-h-screen">
+                    <Sidebar />
+                    <main className="flex-1 bg-background">{children}</main>
+                    <DemoScenarioManager />
+                    <DocumentChatbot />
+                  </div>
+                </EmailProvider>
               </DocumentProvider>
             </NotificationProvider>
           </DemoModeProvider>
