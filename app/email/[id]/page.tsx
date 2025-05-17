@@ -1,24 +1,32 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
-import { ArrowLeft, Reply, Forward, Paperclip, Eye, Send, X, Save, Users, Check } from "lucide-react"
+import { ArrowLeft, Reply, Forward, Paperclip, Eye, Send, X, Save, Users, Check, AlertCircle } from "lucide-react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { RichTextEditor } from "@/components/rich-text-editor"
 import { DocumentSelectorModal } from "@/components/document-selector-modal"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { useEmail } from "@/components/context/email-context"
 
 // Mock email data - in a real app, this would come from an API
 const emailData = {
   "1": {
-    id: 1,
+    id: "1",
     sender: "Project Manager",
     senderEmail: "pm@example.com",
     recipients: ["you@example.com"],
@@ -45,7 +53,7 @@ const emailData = {
     ],
   },
   "2": {
-    id: 2,
+    id: "2",
     sender: "HR Department",
     senderEmail: "hr@example.com",
     recipients: ["you@example.com", "team@example.com"],
@@ -114,8 +122,88 @@ const otherContacts = [
 
 export default function EmailDetailPage() {
   const params = useParams()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const draftId = searchParams.get("draft")
+  const { addSentEmail, markAsRead, inboxEmails, sentEmails, saveDraft, updateDraft, deleteDraft, getDraft } =
+    useEmail()
   const emailId = params.id as string
-  const email = emailData[emailId] || emailData["1"] // Fallback to first email if not found
+
+  // Find the email in both inbox and sent emails
+  const [email, setEmail] = useState<any>(null)
+  const [isInboxEmail, setIsInboxEmail] = useState(false)
+  const [currentDraftId, setCurrentDraftId] = useState<string | null>(null)
+
+  // Warning dialog state
+  const [showWarningDialog, setShowWarningDialog] = useState(false)
+  const [warningMessage, setWarningMessage] = useState("")
+
+  // Show warning dialog
+  const showWarning = (message: string) => {
+    setWarningMessage(message)
+    setShowWarningDialog(true)
+  }
+
+  useEffect(() => {
+    // Find the email in both inbox and sent emails
+    let foundEmail = inboxEmails.find((e) => e.id === emailId)
+    let isInbox = false
+
+    if (foundEmail) {
+      isInbox = true
+    } else {
+      foundEmail = sentEmails.find((e) => e.id === emailId)
+    }
+
+    // Fallback to mock data if not found
+    if (!foundEmail) {
+      foundEmail = emailData[emailId] || emailData["1"]
+      isInbox = true // Assume mock data is inbox
+    }
+
+    setEmail(foundEmail)
+    setIsInboxEmail(isInbox)
+
+    // Mark as read if it's an inbox email and not already read
+    if (isInbox && foundEmail && !foundEmail.read) {
+      markAsRead(emailId)
+    }
+  }, [emailId, inboxEmails, sentEmails, markAsRead])
+
+  // Load draft if draftId is provided
+  useEffect(() => {
+    if (draftId && email) {
+      const draft = getDraft(draftId)
+      if (draft) {
+        setCurrentDraftId(draftId)
+
+        if (draft.type === "reply") {
+          setIsReplying(true)
+          setReplyContent(draft.content || "")
+
+          if (draft.attachments) {
+            setAttachedDocuments(
+              draft.attachments.map((attachment) => ({
+                id: typeof attachment.id === "number" ? attachment.id : Number.parseInt(attachment.id.toString()),
+                title: attachment.name,
+                type: attachment.type,
+                lastModified: new Date().toISOString(),
+                owner: "You",
+              })),
+            )
+          }
+        } else if (draft.type === "forward") {
+          setIsForwarding(true)
+          setRecipients(draft.recipients || [])
+          setForwardContent(draft.content || "")
+
+          if (draft.attachments) {
+            setForwardAttachments(draft.attachments)
+          }
+        }
+      }
+    }
+  }, [draftId, email, getDraft])
 
   const [isReplying, setIsReplying] = useState(false)
   const [replyContent, setReplyContent] = useState("")
@@ -149,32 +237,175 @@ export default function EmailDetailPage() {
   }
 
   const handleSendReply = () => {
-    // In a real app, this would send the reply
-    alert("Reply sent successfully!")
+    if (!email) return
+
+    // Create a new sent email
+    const newSentEmail = {
+      id: `sent-${Date.now()}`,
+      sender: "You",
+      senderEmail: "you@example.com",
+      recipients: [email.senderEmail],
+      subject: `Re: ${email.subject}`,
+      preview: replyContent.replace(/<[^>]*>/g, "").substring(0, 100),
+      content: replyContent,
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
+      read: true,
+      attachments:
+        attachedDocuments.length > 0
+          ? attachedDocuments.map((doc) => ({
+              id: doc.id,
+              name: doc.title,
+              size: "1.0 MB", // Placeholder size
+              type: doc.type,
+            }))
+          : undefined,
+    }
+
+    // Add to sent emails
+    addSentEmail(newSentEmail)
+
+    // Delete draft if it exists
+    if (currentDraftId) {
+      deleteDraft(currentDraftId)
+    }
+
+    // Show success message
+    showWarning("Reply sent successfully!")
     setIsReplying(false)
     setReplyContent("")
     setAttachedDocuments([])
+
+    // Navigate to sent emails
+    router.push("/email?tab=sent")
   }
 
   const handleSendForward = () => {
-    // In a real app, this would send the forwarded email
+    if (!email) return
+
+    // Validate recipients
     if (recipients.length === 0) {
-      alert("Please add at least one recipient")
+      showWarning("Please add at least one recipient")
       return
     }
-    alert(`Email forwarded to ${recipients.join(", ")}`)
+
+    // Create a new sent email
+    const newSentEmail = {
+      id: `sent-${Date.now()}`,
+      sender: "You",
+      senderEmail: "you@example.com",
+      recipients: recipients,
+      subject: email.subject.startsWith("Fwd:") ? email.subject : `Fwd: ${email.subject}`,
+      preview: forwardContent.replace(/<[^>]*>/g, "").substring(0, 100),
+      content: forwardContent,
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
+      read: true,
+      attachments:
+        forwardAttachments.length > 0
+          ? forwardAttachments.map((attachment) => ({
+              id: attachment.id,
+              name: attachment.name,
+              size: attachment.size,
+              type: attachment.type,
+            }))
+          : undefined,
+    }
+
+    // Add to sent emails
+    addSentEmail(newSentEmail)
+
+    // Delete draft if it exists
+    if (currentDraftId) {
+      deleteDraft(currentDraftId)
+    }
+
+    showWarning(`Email forwarded to ${recipients.join(", ")}`)
     setIsForwarding(false)
     setForwardContent("")
     setForwardAttachments([])
     setRecipients([])
+
+    // Navigate to sent emails
+    router.push("/email?tab=sent")
   }
 
-  const handleSaveAsDraft = () => {
-    // In a real app, this would save the reply as a draft
-    alert("Reply saved as draft!")
+  const handleSaveReplyAsDraft = () => {
+    if (!email || !replyContent) {
+      showWarning("Nothing to save as draft")
+      return
+    }
+
+    const draftData = {
+      type: "reply" as const,
+      recipients: [email.senderEmail],
+      subject: `Re: ${email.subject}`,
+      content: replyContent,
+      originalEmailId: email.id,
+      attachments:
+        attachedDocuments.length > 0
+          ? attachedDocuments.map((doc) => ({
+              id: doc.id,
+              name: doc.title,
+              size: "1.0 MB", // Placeholder size
+              type: doc.type,
+            }))
+          : undefined,
+    }
+
+    if (currentDraftId) {
+      // Update existing draft
+      updateDraft(currentDraftId, draftData)
+    } else {
+      // Create new draft
+      const newDraftId = saveDraft(draftData)
+      setCurrentDraftId(newDraftId)
+    }
+
+    showWarning("Reply saved as draft!")
     setIsReplying(false)
-    setReplyContent("")
-    setAttachedDocuments([])
+
+    // Redirect to drafts tab
+    router.push("/email?tab=drafts")
+  }
+
+  const handleSaveForwardAsDraft = () => {
+    if (!email || (!recipients.length && !forwardContent)) {
+      showWarning("Nothing to save as draft")
+      return
+    }
+
+    const draftData = {
+      type: "forward" as const,
+      recipients,
+      subject: email.subject.startsWith("Fwd:") ? email.subject : `Fwd: ${email.subject}`,
+      content: forwardContent,
+      originalEmailId: email.id,
+      attachments:
+        forwardAttachments.length > 0
+          ? forwardAttachments.map((attachment) => ({
+              id: attachment.id,
+              name: attachment.name,
+              size: attachment.size,
+              type: attachment.type,
+            }))
+          : undefined,
+    }
+
+    if (currentDraftId) {
+      // Update existing draft
+      updateDraft(currentDraftId, draftData)
+    } else {
+      // Create new draft
+      const newDraftId = saveDraft(draftData)
+      setCurrentDraftId(newDraftId)
+    }
+
+    showWarning("Forward saved as draft!")
+    setIsForwarding(false)
+
+    // Redirect to drafts tab
+    router.push("/email?tab=drafts")
   }
 
   const handleSelectDocument = (document: Document) => {
@@ -187,20 +418,32 @@ export default function EmailDetailPage() {
   }
 
   const prepareForwardContent = () => {
+    if (!email) return
+
     const subject = email.subject.startsWith("Fwd:") ? email.subject : `Fwd: ${email.subject}`
     const forwardHeader = `
-    <p>---------- Forwarded message ---------</p>
-    <p>From: ${email.sender} &lt;${email.senderEmail}&gt;</p>
-    <p>Date: ${email.date}</p>
-    <p>Subject: ${email.subject}</p>
-    <p>To: ${email.recipients.join(", ")}</p>
-    <p>-----------------------------------------</p>
-    <br/>
-  `
-    setForwardContent(forwardHeader + email.content)
+  <p>---------- Forwarded message ---------</p>
+  <p>From: ${email.sender} &lt;${email.senderEmail}&gt;</p>
+  <p>Date: ${email.date}</p>
+  <p>Subject: ${email.subject}</p>
+  <p>To: ${email.recipients.join(", ")}</p>
+  <p>-----------------------------------------</p>
+  <br/>
+`
+    setForwardContent(forwardHeader)
     if (email.attachments) {
       setForwardAttachments([...email.attachments])
     }
+  }
+
+  if (!email) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold">Loading email...</h2>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -274,28 +517,31 @@ export default function EmailDetailPage() {
             </div>
           )}
 
-          <div className="flex items-center justify-between border-t p-4">
-            <div className="space-x-2">
-              <Button
-                onClick={() => {
-                  setIsForwarding(false)
-                  setIsReplying(true)
-                }}
-              >
-                <Reply className="mr-2 h-4 w-4" /> Reply
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsReplying(false)
-                  setIsForwarding(true)
-                  prepareForwardContent()
-                }}
-              >
-                <Forward className="mr-2 h-4 w-4" /> Forward
-              </Button>
+          {/* Only show reply/forward buttons for inbox emails */}
+          {isInboxEmail && (
+            <div className="flex items-center justify-between border-t p-4">
+              <div className="space-x-2">
+                <Button
+                  onClick={() => {
+                    setIsForwarding(false)
+                    setIsReplying(true)
+                  }}
+                >
+                  <Reply className="mr-2 h-4 w-4" /> Reply
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsReplying(false)
+                    setIsForwarding(true)
+                    prepareForwardContent()
+                  }}
+                >
+                  <Forward className="mr-2 h-4 w-4" /> Forward
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
 
           {isReplying && (
             <div className="border-t p-4">
@@ -336,7 +582,7 @@ export default function EmailDetailPage() {
                   <Button variant="outline" onClick={() => setIsReplying(false)}>
                     Cancel
                   </Button>
-                  <Button variant="outline" onClick={handleSaveAsDraft}>
+                  <Button variant="outline" onClick={handleSaveReplyAsDraft}>
                     <Save className="mr-2 h-4 w-4" /> Save as Draft
                   </Button>
                   <Button onClick={handleSendReply}>
@@ -515,13 +761,7 @@ export default function EmailDetailPage() {
                   <Button variant="outline" onClick={() => setIsForwarding(false)}>
                     Cancel
                   </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      alert("Draft saved!")
-                      setIsForwarding(false)
-                    }}
-                  >
+                  <Button variant="outline" onClick={handleSaveForwardAsDraft}>
                     <Save className="mr-2 h-4 w-4" /> Save as Draft
                   </Button>
                   <Button onClick={handleSendForward}>
@@ -533,6 +773,26 @@ export default function EmailDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Warning Dialog */}
+      <Dialog open={showWarningDialog} onOpenChange={setShowWarningDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600">
+              <AlertCircle className="h-5 w-5" />
+              Warning
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p>{warningMessage}</p>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowWarningDialog(false)} className="w-full">
+              OK
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Document Preview Dialog */}
       <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
