@@ -232,7 +232,7 @@ export default function ProjectDetailPage() {
         const storedProjects = localStorage.getItem("projects")
         if (storedProjects) {
           const parsedProjects = JSON.parse(storedProjects)
-          const foundProject = parsedProjects.find((p) => p.id === projectId)
+          const foundProject = parsedProjects.find((p) => p.id === Number(projectId))
           if (foundProject) {
             setProject(foundProject)
             setLoading(false)
@@ -371,16 +371,24 @@ export default function ProjectDetailPage() {
     done: project.tasks ? project.tasks.filter((t) => t.status === "Done").length : 0,
   }
 
+  // Function to get team member name by ID
+  const getTeamMemberName = (memberId) => {
+    if (!memberId && memberId !== 0) return ""
+    const member = project.team.find((m) => m.id === memberId)
+    return member ? member.name : `Unknown (ID: ${memberId})`
+  }
+
   return (
     <div className="container mx-auto p-6">
       <div className="flex items-center mb-6">
         <Button variant="ghost" size="icon" onClick={() => router.back()} className="mr-4">
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold">{project.title}</h1>
           <div className="flex items-center gap-2 mt-1">{getPriorityBadge(project.priority)}</div>
         </div>
+        <Button onClick={() => router.push(`/projects/${projectId}/edit`)}>Edit Project</Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -530,7 +538,7 @@ export default function ProjectDetailPage() {
                             {task.assignedTo && (
                               <div className="flex items-center text-sm">
                                 <span className="text-muted-foreground mr-1">Assigned to:</span>
-                                <span className="font-medium">{task.assignedTo}</span>
+                                <span className="font-medium">{getTeamMemberName(task.assignedTo)}</span>
                               </div>
                             )}
                             <div className="flex items-center text-sm text-muted-foreground">

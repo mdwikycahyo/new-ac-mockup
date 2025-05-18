@@ -20,7 +20,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, Trash, Calendar, User, Users } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Checkbox } from "@/components/ui/checkbox"
-import { useState, useEffect } from "react"
 
 // Define types for team members and props
 interface TeamMember {
@@ -315,9 +314,9 @@ export function AddProjectModal({ isOpen, onClose, onAddProject, teamMembers }: 
                                   checked={field.value.includes(member.id)}
                                   onCheckedChange={(checked) => {
                                     if (checked) {
-                                      field.onChange([...field.value, member.id]);
+                                      field.onChange([...field.value, member.id])
                                     } else {
-                                      field.onChange(field.value.filter((id) => id !== member.id));
+                                      field.onChange(field.value.filter((id) => id !== member.id))
                                     }
                                   }}
                                 />
@@ -502,7 +501,7 @@ export function AddProjectModal({ isOpen, onClose, onAddProject, teamMembers }: 
                                   {form.watch("team").length > 0 ? (
                                     form.watch("team").map((memberId) => {
                                       const member = teamMembers.find((m) => m.id === memberId)
-                                      if (!member) return null;
+                                      if (!member) return null
                                       return (
                                         <SelectItem key={member.id} value={member.id.toString()}>
                                           {member.name}
@@ -530,7 +529,7 @@ export function AddProjectModal({ isOpen, onClose, onAddProject, teamMembers }: 
                                 <Calendar className="h-3.5 w-3.5 mr-1" /> Due Date
                               </FormLabel>
                               <FormControl>
-                                <Input type="date" {...field} />
+                                <Input type="date" {...field} max={form.watch("dueDate")} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
