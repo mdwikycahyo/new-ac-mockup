@@ -64,100 +64,7 @@ export default function ProjectsPage() {
         },
       ],
       targets: ["Improve user engagement by 30%", "Reduce bounce rate by 15%", "Increase conversion rate by 10%"],
-    },
-    {
-      id: 2,
-      title: "Mobile App Development",
-      priority: "High",
-      dueDate: "2024-06-15",
-      description:
-        "Development of a cross-platform mobile application for our customers with core functionality and integrations.",
-      team: [
-        { id: 1, name: "Alex Johnson", role: "Project Manager", avatar: "/placeholder.svg?height=40&width=40" },
-        { id: 3, name: "Jamie Lee", role: "Developer", avatar: "/placeholder.svg?height=40&width=40" },
-        { id: 5, name: "Morgan Chen", role: "Backend Developer", avatar: "/placeholder.svg?height=40&width=40" },
-      ],
-      tasks: [
-        {
-          id: 1,
-          title: "Testing",
-          description: "Conduct thorough testing across devices and platforms.",
-          status: "In Progress",
-          priority: "High",
-          assignedTo: 3,
-          dueDate: "2024-06-05",
-        },
-        {
-          id: 2,
-          title: "Bug fixing",
-          description: "Address issues identified during testing.",
-          status: "To Do",
-          priority: "High",
-          assignedTo: 5,
-          dueDate: "2024-06-10",
-        },
-        {
-          id: 3,
-          title: "App store submission",
-          description: "Prepare and submit app to app stores.",
-          status: "To Do",
-          priority: "High",
-          assignedTo: 1,
-          dueDate: "2024-06-15",
-        },
-      ],
-      targets: [
-        "Achieve 10,000 downloads in first month",
-        "Maintain 4.5+ star rating",
-        "Achieve 30% user retention after 30 days",
-      ],
-    },
-    {
-      id: 3,
-      title: "Marketing Campaign",
-      priority: "High",
-      dueDate: "2024-07-15",
-      description: "A comprehensive digital marketing campaign for our new product launch across multiple channels.",
-      team: [
-        { id: 1, name: "Alex Johnson", role: "Project Manager", avatar: "/placeholder.svg?height=40&width=40" },
-        { id: 6, name: "Riley Park", role: "Marketing Manager", avatar: "/placeholder.svg?height=40&width=40" },
-        { id: 7, name: "Jordan Quinn", role: "Content Creator", avatar: "/placeholder.svg?height=40&width=40" },
-      ],
-      tasks: [
-        {
-          id: 1,
-          title: "Channel setup",
-          description: "Configure marketing channels, tracking, and automation workflows.",
-          status: "In Progress",
-          priority: "Medium",
-          assignedTo: 6,
-          dueDate: "2024-06-15",
-        },
-        {
-          id: 2,
-          title: "Campaign launch",
-          description: "Execute campaign launch across all channels.",
-          status: "To Do",
-          priority: "High",
-          assignedTo: 6,
-          dueDate: "2024-06-20",
-        },
-        {
-          id: 3,
-          title: "Performance monitoring",
-          description: "Track campaign performance and make adjustments as needed.",
-          status: "To Do",
-          priority: "Medium",
-          assignedTo: 1,
-          dueDate: "2024-07-10",
-        },
-      ],
-      targets: [
-        "Generate 500 qualified leads",
-        "Achieve 2.5% conversion rate",
-        "Maintain cost per acquisition under $50",
-      ],
-    },
+    }
   ])
 
   // Load projects from localStorage on initial render
@@ -317,7 +224,7 @@ function ProjectCard({ project }) {
               </div>
               <ul className="text-sm space-y-1 list-disc pl-5 text-muted-foreground">
                 {project.targets.slice(0, 2).map((target, index) => (
-                  <li key={index}>{target}</li>
+                  <li key={index}>{typeof target === "object" ? target.description : target}</li>
                 ))}
                 {project.targets.length > 2 && <li className="text-primary">+{project.targets.length - 2} more</li>}
               </ul>

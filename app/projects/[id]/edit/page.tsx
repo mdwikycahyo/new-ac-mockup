@@ -1,5 +1,6 @@
 "use client"
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -12,7 +13,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, Plus, Trash, Calendar, User, Users, Search } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Checkbox } from "@/components/ui/checkbox"
-import { useState } from "react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 // Define types for team members
 interface TeamMember {
@@ -154,9 +164,15 @@ const teamMembers: TeamMember[] = [
   },
 ]
 
-export default function CreateProjectPage() {
+export default function EditProjectPage() {
+  const params = useParams()
   const router = useRouter()
+  const projectId = params.id as string
   const [searchQuery, setSearchQuery] = useState("")
+  const [project, setProject] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [formValues, setFormValues] = useState<FormValues | null>(null)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -180,6 +196,54 @@ export default function CreateProjectPage() {
     },
   })
 
+  // Fetch project data from localStorage
+  useEffect(() => {
+    const fetchProject = () => {
+      try {
+        const storedProjects = localStorage.getItem("projects")
+        if (storedProjects) {
+          const parsedProjects = JSON.parse(storedProjects)
+          const foundProject = parsedProjects.find((p) => p.id.toString() === projectId)
+          if (foundProject) {
+            setProject(foundProject)
+
+            // Transform project data to match form schema
+            const formData: FormValues = {
+              title: foundProject.title,
+              priority: foundProject.priority,
+              dueDate: foundProject.dueDate,
+              description: foundProject.description,
+              team: foundProject.team.map((member) => member.id),
+              targets: foundProject.targets.map((target) => {
+                // Handle both string targets and object targets with description property
+                return {
+                  text: typeof target === "string" ? target : target.description,
+                }
+              }),
+              tasks: foundProject.tasks.map((task) => ({
+                title: task.title || task.name,
+                description: task.description || "",
+                status: task.status,
+                priority: task.priority,
+                assignedTo: task.assignedTo,
+                dueDate: task.dueDate,
+              })),
+            }
+
+            // Set form values
+            form.reset(formData)
+          }
+        }
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching project:", error)
+        setLoading(false)
+      }
+    }
+
+    fetchProject()
+  }, [projectId, form])
+
   // Filter team members based on search query
   const filteredTeamMembers = teamMembers.filter(
     (member) =>
@@ -187,16 +251,25 @@ export default function CreateProjectPage() {
       member.role.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
-  function onSubmit(values: FormValues) {
+  // Handle form submission
+  const onSubmit = (values: FormValues) => {
+    setFormValues(values)
+    setShowConfirmDialog(true)
+  }
+
+  // Save changes after confirmation
+  const saveChanges = () => {
+    if (!formValues || !project) return
+
     // Filter out empty targets and tasks
-    const filteredTargets = values.targets
+    const filteredTargets = formValues.targets
       .filter((target) => target.text.trim() !== "")
       .map((target) => ({ description: target.text }))
 
-    const filteredTasks = values.tasks.filter((task) => task.title.trim() !== "")
+    const filteredTasks = formValues.tasks.filter((task) => task.title.trim() !== "")
 
     // Get team members data
-    const selectedTeam = values.team.map((memberId) => {
+    const selectedTeam = formValues.team.map((memberId) => {
       const member = teamMembers.find((m) => m.id === memberId)
       return {
         id: member?.id || 0,
@@ -206,32 +279,51 @@ export default function CreateProjectPage() {
       }
     })
 
-    // Create a new project with the form values
-    const newProject = {
-      id: Math.floor(Math.random() * 1000), // This would be handled by the backend in a real app
-      title: values.title,
-      priority: values.priority,
-      dueDate: values.dueDate,
-      description: values.description,
+    // Check if any team members were removed and update task assignments
+    const previousTeamIds = project.team.map((member) => member.id)
+    const newTeamIds = selectedTeam.map((member) => member.id)
+    const removedTeamIds = previousTeamIds.filter((id) => !newTeamIds.includes(id))
+
+    // Update tasks to remove assignments to removed team members
+    const updatedTasks = filteredTasks.map((task) => {
+      if (task.assignedTo && removedTeamIds.includes(task.assignedTo)) {
+        return { ...task, assignedTo: undefined }
+      }
+      return task
+    })
+
+    // Check if project due date changed and update task due dates if needed
+    const projectDueDate = new Date(formValues.dueDate)
+    updatedTasks.forEach((task) => {
+      const taskDueDate = new Date(task.dueDate)
+      if (taskDueDate > projectDueDate) {
+        task.dueDate = formValues.dueDate
+      }
+    })
+
+    // Create updated project with the form values
+    const updatedProject = {
+      ...project,
+      title: formValues.title,
+      priority: formValues.priority,
+      dueDate: formValues.dueDate,
+      description: formValues.description,
       team: selectedTeam,
       targets: filteredTargets,
-      tasks: filteredTasks,
-      status: "Planning", // Default status for new projects
-      progress: 0,
-      tasksCompleted: 0,
-      totalTasks: filteredTasks.length,
-      startDate: new Date().toISOString().split("T")[0], // Today as start date
-      endDate: values.dueDate,
+      tasks: updatedTasks,
+      endDate: formValues.dueDate,
     }
 
-    // In a real app, we would save this to a database
-    // For now, we'll store it in localStorage
-    const existingProjects = localStorage.getItem("projects")
-    const projects = existingProjects ? JSON.parse(existingProjects) : []
-    projects.push(newProject)
-    localStorage.setItem("projects", JSON.stringify(projects))
+    // Update project in localStorage
+    const storedProjects = localStorage.getItem("projects")
+    if (storedProjects) {
+      const parsedProjects = JSON.parse(storedProjects)
+      const updatedProjects = parsedProjects.map((p) => (p.id.toString() === projectId ? updatedProject : p))
+      localStorage.setItem("projects", JSON.stringify(updatedProjects))
+    }
 
-    // Navigate back to projects page
+    // Close dialog and redirect
+    setShowConfirmDialog(false)
     router.push("/projects")
   }
 
@@ -261,7 +353,7 @@ export default function CreateProjectPage() {
         status: "To Do",
         priority: "Medium",
         assignedTo: undefined,
-        dueDate: "",
+        dueDate: form.getValues("dueDate"), // Default to project due date
       },
     ])
   }
@@ -275,13 +367,43 @@ export default function CreateProjectPage() {
     )
   }
 
+  if (loading) {
+    return (
+      <div className="container mx-auto py-6">
+        <div className="flex items-center mb-6">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} className="mr-4">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-2xl font-bold">Loading project...</h1>
+        </div>
+      </div>
+    )
+  }
+
+  if (!project) {
+    return (
+      <div className="container mx-auto py-6">
+        <div className="flex items-center mb-6">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} className="mr-4">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-2xl font-bold">Project not found</h1>
+        </div>
+        <p>The project you're trying to edit could not be found.</p>
+        <Button onClick={() => router.push("/projects")} className="mt-4">
+          Back to Projects
+        </Button>
+      </div>
+    )
+  }
+
   return (
     <div className="container mx-auto py-6">
       <div className="flex items-center mb-6">
         <Button variant="ghost" size="icon" onClick={() => router.back()} className="mr-4">
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-2xl font-bold">Create New Project</h1>
+        <h1 className="text-2xl font-bold">Edit Project</h1>
       </div>
 
       <Form {...form}>
@@ -313,7 +435,7 @@ export default function CreateProjectPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Priority</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select priority" />
@@ -337,7 +459,27 @@ export default function CreateProjectPage() {
                     <FormItem>
                       <FormLabel>Due Date</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input
+                          type="date"
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e)
+
+                            // Update task due dates if they fall after the new project due date
+                            const newDueDate = new Date(e.target.value)
+                            const tasks = form.getValues("tasks")
+
+                            const updatedTasks = tasks.map((task) => {
+                              const taskDueDate = new Date(task.dueDate)
+                              if (taskDueDate > newDueDate) {
+                                return { ...task, dueDate: e.target.value }
+                              }
+                              return task
+                            })
+
+                            form.setValue("tasks", updatedTasks)
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -529,7 +671,7 @@ export default function CreateProjectPage() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Status</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Select status" />
@@ -552,7 +694,7 @@ export default function CreateProjectPage() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Priority</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Select priority" />
@@ -640,13 +782,27 @@ export default function CreateProjectPage() {
           </Card>
 
           <div className="flex justify-end gap-4">
-            <Button type="button" variant="outline" onClick={() => router.push("/projects")}>
+            <Button type="button" variant="outline" onClick={() => router.push(`/projects/${projectId}`)}>
               Cancel
             </Button>
-            <Button type="submit">Create Project</Button>
+            <Button type="submit">Save Changes</Button>
           </div>
         </form>
       </Form>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save Changes</AlertDialogTitle>
+            <AlertDialogDescription>Are you sure you want to save these changes to the project?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={saveChanges}>Save Changes</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
