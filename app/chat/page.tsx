@@ -21,30 +21,36 @@ export default function ChatPage() {
       status: "online",
       unread: 2,
       lastMessage: "Let's discuss the project timeline",
+      time: "10:30 AM"
     },
     {
       id: 2,
       name: "Marketing Team",
       status: "online",
       lastMessage: "Campaign updates for Q3",
+      time: "9:30 AM",
+      unread: 1,
     },
     {
       id: 3,
       name: "HR Representative",
       status: "away",
       lastMessage: "About the Team Building event",
+      time: "9:15 AM",
     },
     {
       id: 4,
       name: "IT Support",
       status: "offline",
       lastMessage: "Your ticket has been resolved",
+      time: "9:10 AM",
     },
     {
       id: 5,
       name: "Finance Department",
       status: "online",
       lastMessage: "Budget approval status",
+      time: "9:00 AM",
     },
     // New contacts - Finance
     {
@@ -52,6 +58,7 @@ export default function ChatPage() {
       name: "Finance Director",
       status: "online",
       lastMessage: "Budget review for Q4",
+      time: "8:30 AM",
     },
     // Subsidiary
     {
@@ -60,6 +67,7 @@ export default function ChatPage() {
       status: "away",
       lastMessage: "Monthly performance report",
       unread: 1,
+      time: "7:30 AM",
     },
     // Peer
     {
@@ -67,6 +75,7 @@ export default function ChatPage() {
       name: "Operations Manager",
       status: "online",
       lastMessage: "Production schedule update",
+      time: "Yesterday",
     },
     // Stakeholder - Client
     {
@@ -75,6 +84,7 @@ export default function ChatPage() {
       status: "online",
       lastMessage: "Project feedback and next steps",
       unread: 3,
+      time: "Yesterday",
     },
     // Stakeholder - Vendor
     {
@@ -82,6 +92,7 @@ export default function ChatPage() {
       name: "Vendor Coordinator",
       status: "offline",
       lastMessage: "Supply chain update",
+      time: "Yesterday",
     },
     // IT Department
     {
@@ -89,6 +100,7 @@ export default function ChatPage() {
       name: "IT Systems Specialist",
       status: "away",
       lastMessage: "System maintenance schedule",
+      time: "Yesterday",
     },
     // Legal Department
     {
@@ -96,6 +108,7 @@ export default function ChatPage() {
       name: "Legal Counsel",
       status: "online",
       lastMessage: "Contract review status",
+      time: "Yesterday",
     },
   ]
 
@@ -108,18 +121,21 @@ export default function ChatPage() {
       unread: 1,
       lastMessage:
         "Hai, selamat pagi! Saya ingin follow up diskusi kita sebelumnya soal kegiatan Team Building. Sudah ada gambaran aktivitas yang ingin anda jalankan?",
+      time: "11:30 AM"
     },
     {
       id: 100,
       name: "President Director",
       status: "online",
       lastMessage: "Good morning. I'd like to discuss the quarterly business review presentation.",
+      time: "11:00 AM"
     },
     {
       id: 101,
       name: "VP of Solution",
       status: "away",
       lastMessage: "Have you reviewed the technical specifications for the new project?",
+      time: "10:30 AM"
     },
   ]
 
@@ -1138,6 +1154,7 @@ interface Contact {
   avatar?: string
   unread?: number
   lastMessage?: string
+  time: string
 }
 
 function ContactItem({
@@ -1172,16 +1189,19 @@ function ContactItem({
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between">
-          <p className="font-medium">{contact.name}</p>
+          <p className="font-semibold line-clamp-1">{contact.name}</p>
+          <div className="flex items-center gap-2">
+            <p className={`text-xs ${contact.unread && "font-bold text-primary"}`}>{contact.time}</p>
+          </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground line-clamp-1 mr-2 flex-1">{contact.lastMessage}</p>
           {contact.unread && (
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
+            <p className="flex h-5 w-5 min-w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-white">
               {contact.unread}
-            </span>
+            </p>          
           )}
         </div>
-        {contact.lastMessage && (
-          <p className="truncate text-sm text-muted-foreground max-w-[250px]">{contact.lastMessage}</p>
-        )}
       </div>
     </div>
   )

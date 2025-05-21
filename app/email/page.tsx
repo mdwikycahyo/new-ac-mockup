@@ -199,24 +199,14 @@ function EmailItem({ email }: { email: Email }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between">
             <p className={`font-medium ${!email.read ? "font-semibold" : ""}`}>{email.sender}</p>
-            <p className="text-sm text-muted-foreground">{email.time}</p>
+            <div className="flex items-center gap-2">
+              {!email.read && <span className="h-3 w-3 rounded-full bg-primary"></span>}
+              <p className={`text-sm ${!email.read ? "font-semibold text-primary" : ""}`}>{email.time}</p>
+            </div>
           </div>
-          <p className={`truncate ${!email.read ? "font-semibold" : ""}`}>{email.subject}</p>
+          <p className={`truncate ${!email.read ? "font-semibold text-primary" : ""}`}>{email.subject}</p>
           <p className="truncate text-sm text-muted-foreground">{email.preview}</p>
         </div>
-        {email.priority && (
-          <div className="flex-shrink-0">
-            <span
-              className={`inline-block h-2 w-2 rounded-full ${
-                email.priority === "high"
-                  ? "bg-red-500"
-                  : email.priority === "medium"
-                    ? "bg-yellow-500"
-                    : "bg-green-500"
-              }`}
-            />
-          </div>
-        )}
       </div>
     </Link>
   )
