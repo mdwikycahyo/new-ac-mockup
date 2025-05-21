@@ -1191,13 +1191,13 @@ function ContactItem({
         <div className="flex items-center justify-between">
           <p className="font-semibold line-clamp-1">{contact.name}</p>
           <div className="flex items-center gap-2">
-            <p className={`text-xs ${contact.unread && "font-bold text-[#000000]"}`}>{contact.time}</p>
+            <p className={`text-xs ${contact.unread && "font-bold text-primary"}`}>{contact.time}</p>
           </div>
         </div>
         <div className="flex items-center justify-between">
           <p className="text-xs text-muted-foreground line-clamp-1 mr-2 flex-1">{contact.lastMessage}</p>
           {contact.unread && (
-            <p className="flex h-5 w-5 min-w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#000000] text-[10px] font-medium text-white">
+            <p className="flex h-5 w-5 min-w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-white">
               {contact.unread}
             </p>          
           )}
