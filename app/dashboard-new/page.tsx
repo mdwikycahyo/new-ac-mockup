@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useRouter } from "next/navigation"
 
-// Sample data for new messages
+// Sample data for new Chats
 const newMessages = [
   {
     id: 1,
@@ -573,13 +573,13 @@ export default function DashboardNew() {
             </CardContent>
           </Card>
 
-          {/* New Messages Section */}
+          {/* New Chats Section */}
           <Card>
             <CardHeader className="p-3 border-b bg-accent">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <MessageSquare className="h-5 w-5 text-primary" />
-                  <CardTitle>New Messages</CardTitle>
+                  <CardTitle>New Chats</CardTitle>
                 </div>
                 {unreadMessages.length > 0 && (
                   <Button
@@ -616,12 +616,12 @@ export default function DashboardNew() {
                           <div className="flex items-center justify-between">
                             <p className="font-semibold line-clamp-1">{message.sender}</p>
                             <div className="flex items-center gap-2">
-                              <p className="text-xs font-bold">{message.time}</p>
+                              <p className="text-xs font-bold text-[#000000]">{message.time}</p>
                             </div>
                           </div>
                           <div className="flex items-center justify-between">
                             <p className="text-xs text-muted-foreground line-clamp-1 mr-2 flex-1">{message.content}</p>
-                            <p className="flex h-5 w-5 min-w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-white">
+                            <p className="flex h-5 w-5 min-w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#000000] text-[10px] font-medium text-white">
                               {message.unreadCount}
                             </p>
                           </div>
@@ -631,7 +631,7 @@ export default function DashboardNew() {
                   </div>
                 ) : (
                   <div className="flex h-full items-center justify-center p-6 text-center text-muted-foreground">
-                    No new messages
+                    No new Chats
                   </div>
                 )}
               </ScrollArea>
@@ -672,11 +672,11 @@ export default function DashboardNew() {
                           <div className="flex items-center justify-between">
                             <p className="font-semibold line-clamp-1">{email.sender}</p>
                             <div className="flex items-center gap-2">
-                              <span className="h-3 w-3 rounded-full bg-primary"></span>
-                              <p className="text-xs font-bold">{email.time}</p>
+                              <span className="h-3 w-3 rounded-full bg-[#000000]"></span>
+                              <p className="text-xs font-bold text-[#000000]">{email.time}</p>
                             </div>
                           </div>
-                          <p className="font-semibold line-clamp-1">{email.subject}</p>
+                          <p className="font-semibold line-clamp-1 text-[#000000]">{email.subject}</p>
                           <p className="text-xs text-muted-foreground line-clamp-1">{email.preview}</p>
                         </div>
                       </div>

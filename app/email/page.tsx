@@ -82,7 +82,7 @@ export default function EmailPage() {
               <Link href="/email?tab=inbox" className="block">
                 <Button variant={activeTab === "inbox" ? "secondary" : "ghost"} className="w-full justify-start">
                   <Inbox className="mr-2 h-5 w-5" /> Inbox
-                  <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
+                  <span className="ml-auto rounded-full bg-[#000000] px-2 py-0.5 text-xs text-primary-foreground">
                     {inboxEmails.filter((email) => !email.read).length}
                   </span>
                 </Button>
@@ -200,11 +200,11 @@ function EmailItem({ email }: { email: Email }) {
           <div className="flex items-center justify-between">
             <p className={`font-medium ${!email.read ? "font-semibold" : ""}`}>{email.sender}</p>
             <div className="flex items-center gap-2">
-              {!email.read && <span className="h-3 w-3 rounded-full bg-primary"></span>}
-              <p className={`text-sm ${!email.read ? "font-semibold" : ""}`}>{email.time}</p>
+              {!email.read && <span className="h-3 w-3 rounded-full bg-[#000000]"></span>}
+              <p className={`text-sm ${!email.read ? "font-semibold text-[#000000]" : ""}`}>{email.time}</p>
             </div>
           </div>
-          <p className={`truncate ${!email.read ? "font-semibold" : ""}`}>{email.subject}</p>
+          <p className={`truncate ${!email.read ? "font-semibold text-[#000000]" : ""}`}>{email.subject}</p>
           <p className="truncate text-sm text-muted-foreground">{email.preview}</p>
         </div>
       </div>

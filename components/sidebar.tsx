@@ -227,7 +227,7 @@ export function Sidebar() {
                           <item.icon className="h-5 w-5" />
                           {/* Show notifications based on mode */}
                           {!demoMode && item.hasNotification && notifications[item.href] && (
-                            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
+                            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#000000] text-[10px] text-primary-foreground">
                               {notifications[item.href]}
                             </span>
                           )}
