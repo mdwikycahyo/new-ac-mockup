@@ -620,8 +620,8 @@ export default function DashboardNew() {
                             </div>
                           </div>
                           <div className="flex items-center justify-between">
-                            <p className="text-xs text-muted-foreground line-clamp-1">{message.content}</p>
-                            <p className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-white">
+                            <p className="text-xs text-muted-foreground line-clamp-1 mr-2 flex-1">{message.content}</p>
+                            <p className="flex h-5 w-5 min-w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-white">
                               {message.unreadCount}
                             </p>
                           </div>
